@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -7,25 +7,94 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView, 
   Platform,
-  ScrollView
+  ScrollView,
+  ActivityIndicator,
+  Modal,
+  Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+
+// Configuración de idioma para el calendario (Español)
+LocaleConfig.locales['es'] = {
+  monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+  monthNamesShort: ['Ene.','Feb.','Mar.','Abr.','May.','Jun.','Jul.','Ago.','Sep.','Oct.','Nov.','Dic.'],
+  dayNames: ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'],
+  dayNamesShort: ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'],
+  today: 'Hoy'
+};
+LocaleConfig.defaultLocale = 'es';
+
+const { width } = Dimensions.get('window');
 
 const CreateTripScreen = () => {
   const navigation = useNavigation<any>();
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
-  const [startDateStr, setStartDateStr] = useState('');
-  const [endDateStr, setEndDateStr] = useState('');
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Estados para fechas
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectingStartDate, setSelectingStartDate] = useState(true);
+
+  // Lógica de Autocomplete (Nominatim)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (query.length > 2) {
+        searchLocation(query);
+      } else {
+        setSuggestions([]);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query]);
+
+  const searchLocation = async (text: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&addressdetails=1&limit=5`);
+      const data = await response.json();
+      setSuggestions(data);
+    } catch (error) {
+      console.error("Error searching location:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectSuggestion = (item: any) => {
+    setLocation(item.display_name);
+    setQuery(item.display_name);
+    setSuggestions([]);
+  };
+
+  const handleDayPress = (day: any) => {
+    if (selectingStartDate) {
+      setStartDate(day.dateString);
+      setSelectingStartDate(false);
+    } else {
+      setEndDate(day.dateString);
+      setShowCalendar(false);
+      setSelectingStartDate(true);
+    }
+  };
 
   const handleCreate = () => {
-    // Para este prototipo, simplemente navegamos. 
-    // En el futuro aquí guardaremos en SQLite o Firebase.
     navigation.navigate('MainTabs');
   };
+
+  // Marcar fechas en el calendario
+  const markedDates: any = {};
+  if (startDate) markedDates[startDate] = { selected: true, startingDay: true, color: '#007AFF' };
+  if (endDate) markedDates[endDate] = { selected: true, endingDay: true, color: '#007AFF' };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,7 +102,7 @@ const CreateTripScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <TouchableOpacity 
             style={styles.backButton} 
             onPress={() => navigation.goBack()}
@@ -43,10 +112,11 @@ const CreateTripScreen = () => {
 
           <View style={styles.header}>
             <Text style={styles.title}>Nuevo Viaje</Text>
-            <Text style={styles.subtitle}>Cuéntanos los detalles de tu próxima aventura</Text>
+            <Text style={styles.subtitle}>Configura tu próxima aventura en segundos</Text>
           </View>
 
           <View style={styles.form}>
+            {/* Nombre del Viaje */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nombre del Viaje</Text>
               <TextInput
@@ -57,39 +127,65 @@ const CreateTripScreen = () => {
               />
             </View>
 
+            {/* Lugar con Autocomplete */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Lugar</Text>
               <View style={styles.inputIconContainer}>
-                <Ionicons name="location-outline" size={20} color="#8E8E93" style={styles.icon} />
+                <Ionicons name="location-outline" size={20} color="#007AFF" style={styles.icon} />
                 <TextInput
                   style={[styles.input, { paddingLeft: 40 }]}
-                  placeholder="Ej: Madrid, España"
-                  value={location}
-                  onChangeText={setLocation}
+                  placeholder="¿A dónde vamos?"
+                  value={query}
+                  onChangeText={setQuery}
                 />
+                {loading && <ActivityIndicator style={styles.loader} size="small" color="#007AFF" />}
               </View>
+              
+              {suggestions.length > 0 && (
+                <View style={styles.suggestionsContainer}>
+                  {suggestions.map((item, index) => (
+                    <TouchableOpacity 
+                      key={index} 
+                      style={styles.suggestionItem}
+                      onPress={() => handleSelectSuggestion(item)}
+                    >
+                      <Ionicons name="pin-outline" size={16} color="#8E8E93" />
+                      <Text style={styles.suggestionText} numberOfLines={1}>
+                        {item.display_name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
 
+            {/* Selector de Fechas */}
             <View style={styles.dateContainer}>
-              <View style={styles.datePicker}>
+              <TouchableOpacity 
+                style={styles.datePicker} 
+                onPress={() => { setShowCalendar(true); setSelectingStartDate(true); }}
+              >
                 <Text style={styles.label}>Fecha Inicio</Text>
-                <TextInput
-                  style={styles.dateValue}
-                  placeholder="DD/MM/AAAA"
-                  value={startDateStr}
-                  onChangeText={setStartDateStr}
-                />
-              </View>
+                <View style={styles.dateRow}>
+                  <Ionicons name="calendar-outline" size={18} color="#007AFF" />
+                  <Text style={[styles.dateValue, !startDate && { color: '#8E8E93' }]}>
+                    {startDate || 'Día inicial'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
 
-              <View style={styles.datePicker}>
+              <TouchableOpacity 
+                style={styles.datePicker} 
+                onPress={() => { setShowCalendar(true); setSelectingStartDate(false); }}
+              >
                 <Text style={styles.label}>Fecha Fin</Text>
-                <TextInput
-                  style={styles.dateValue}
-                  placeholder="DD/MM/AAAA"
-                  value={endDateStr}
-                  onChangeText={setEndDateStr}
-                />
-              </View>
+                <View style={styles.dateRow}>
+                  <Ionicons name="calendar-outline" size={18} color="#007AFF" />
+                  <Text style={[styles.dateValue, !endDate && { color: '#8E8E93' }]}>
+                    {endDate || 'Día final'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -97,19 +193,44 @@ const CreateTripScreen = () => {
             <TouchableOpacity 
               style={styles.createButton} 
               onPress={handleCreate}
-              disabled={!name || !location || !startDateStr || !endDateStr}
+              disabled={!name || !location || !startDate || !endDate}
             >
               <LinearGradient
-                colors={['#007AFF', '#00C6FF']}
+                colors={!name || !location || !startDate || !endDate ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
                 style={styles.gradientButton}
               >
                 <Text style={styles.createButtonText}>Crear Viaje</Text>
-                <Ionicons name="chevron-forward" size={20} color="#fff" />
+                <Ionicons name="airplane-outline" size={20} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Modal del Calendario */}
+      <Modal visible={showCalendar} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.calendarModal}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {selectingStartDate ? 'Selecciona fecha de inicio' : 'Selecciona fecha de fin'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowCalendar(false)}>
+                <Ionicons name="close-circle" size={28} color="#8E8E93" />
+              </TouchableOpacity>
+            </View>
+            <Calendar
+              onDayPress={handleDayPress}
+              markedDates={markedDates}
+              theme={{
+                selectedDayBackgroundColor: '#007AFF',
+                todayTextColor: '#007AFF',
+                arrowColor: '#007AFF',
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -168,6 +289,35 @@ const styles = StyleSheet.create({
     left: 12,
     zIndex: 1,
   },
+  loader: {
+    position: 'absolute',
+    right: 12,
+  },
+  suggestionsContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F2F2F7',
+    marginTop: 4,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#1C1C1E',
+    flex: 1,
+  },
   dateContainer: {
     flexDirection: 'row',
     gap: 16,
@@ -177,10 +327,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
     padding: 16,
     borderRadius: 12,
-    gap: 4,
+    gap: 8,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   dateValue: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#1C1C1E',
     fontWeight: '500',
   },
@@ -203,6 +358,29 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  calendarModal: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
   },
 });
 

@@ -1,86 +1,96 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  SafeAreaView,
+  Dimensions,
+  Image
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+const { width } = Dimensions.get('window');
+const SQUARE_SIZE = (width - 60) / 2; // Margen de 20 a los lados y 20 entre ellos
+
 const StartScreen = () => {
   const navigation = useNavigation<any>();
 
-  const handleCreateTrip = () => {
-    // Navigate to the creation form
-    navigation.navigate('CreateTrip');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
+      {/* Botón de Ajustes (Top Right) */}
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.settingsButton} onPress={() => {}}>
+          <Ionicons name="settings-outline" size={28} color="#1C1C1E" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>¡Hola, Viajero!</Text>
-          <Text style={styles.title}>Tus Aventuras</Text>
-        </View>
-
-        {/* Sección de Acciones Principales */}
-        <View style={styles.actionContainer}>
-          <TouchableOpacity 
-            style={styles.mainAction} 
-            onPress={handleCreateTrip}
+        {/* Logo Placeholder */}
+        <View style={styles.logoContainer}>
+          <LinearGradient
+            colors={['#007AFF', '#00C6FF']}
+            style={styles.logoCircle}
           >
-            <LinearGradient
-              colors={['#007AFF', '#00C6FF']}
-              style={styles.gradientCard}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Ionicons name="add-circle-outline" size={40} color="#fff" />
-              <Text style={styles.actionText}>Crear Nuevo Viaje</Text>
-            </LinearGradient>
+            <Ionicons name="airplane" size={40} color="#fff" />
+          </LinearGradient>
+          <Text style={styles.logoText}>MyTrip</Text>
+        </View>
+
+        {/* Fila de Cuadrados (Crear y Unirse) */}
+        <View style={styles.gridRow}>
+          <TouchableOpacity 
+            style={[styles.squareAction, { backgroundColor: '#F2F2F7' }]} 
+            onPress={() => navigation.navigate('CreateTrip')}
+          >
+            <Ionicons name="add-circle" size={32} color="#007AFF" />
+            <Text style={styles.squareTitle}>Crear Viaje</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryAction} onPress={() => {}}>
-            <Ionicons name="people-outline" size={32} color="#007AFF" />
-            <Text style={styles.secondaryActionText}>Unirme a un Viaje</Text>
+          <TouchableOpacity 
+            style={[styles.squareAction, { backgroundColor: '#F2F2F7' }]} 
+            onPress={() => navigation.navigate('JoinTrip')}
+          >
+            <Ionicons name="people" size={32} color="#5856D6" />
+            <Text style={styles.squareTitle}>Unirse a Viaje</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Sección de Amigos */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Amigos</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAll}>Ver todos</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.friendsScroll}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <View key={i} style={styles.friendPlaceholder}>
-                <View style={[styles.avatar, { backgroundColor: ['#FF9500', '#FF2D55', '#4CD964', '#5856D6', '#007AFF'][i % 5] }]}>
-                  <Text style={styles.avatarText}>A{i}</Text>
-                </View>
-                <Text style={styles.friendName}>Amigo {i}</Text>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.addFriend}>
-              <View style={styles.addFriendInner}>
-                <Ionicons name="person-add-outline" size={24} color="#666" />
-              </View>
-              <Text style={styles.friendName}>Añadir</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+        {/* Rectángulo de Social */}
+        <TouchableOpacity style={styles.wideAction} onPress={() => {}}>
+          <LinearGradient
+            colors={['#5856D6', '#8E8DFF']}
+            style={styles.wideGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <View style={styles.wideContent}>
+              <Ionicons name="chatbubbles-outline" size={28} color="#fff" />
+              <Text style={styles.wideTitle}>Social</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
 
-        {/* Viajes Recientes */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tus Planes Guardados</Text>
-          <View style={styles.emptyContainer}>
-            <Ionicons name="airplane-outline" size={60} color="#E5E5EA" />
-            <Text style={styles.emptyText}>Aún no tienes viajes creados.</Text>
-            <TouchableOpacity style={styles.buttonEmpty} onPress={handleCreateTrip}>
-              <Text style={styles.buttonEmptyText}>Empezar a planificar</Text>
-            </TouchableOpacity>
+        {/* Rectángulo de Mis Viajes */}
+        <TouchableOpacity style={styles.wideAction} onPress={() => {}}>
+          <View style={[styles.wideGradient, { backgroundColor: '#1C1C1E' }]}>
+            <View style={styles.wideContent}>
+              <Ionicons name="journal-outline" size={28} color="#fff" />
+              <Text style={styles.wideTitle}>Mis Viajes</Text>
+            </View>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>3</Text>
+            </View>
           </View>
+        </TouchableOpacity>
+
+        {/* Footer info or Quote */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>"El mundo es un libro y aquellos que no viajan solo leen una página."</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -92,145 +102,125 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  settingsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F2F2F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scrollContent: {
     padding: 20,
-    paddingTop: 40,
+    alignItems: 'center',
   },
-  header: {
-    marginBottom: 30,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+    marginTop: 10,
   },
-  greeting: {
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  logoText: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#1C1C1E',
+    letterSpacing: 1,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  squareAction: {
+    width: SQUARE_SIZE,
+    height: SQUARE_SIZE,
+    borderRadius: 24,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  squareTitle: {
     fontSize: 16,
-    color: '#8E8E93',
-    fontWeight: '500',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#1C1C1E',
   },
-  actionContainer: {
-    marginBottom: 40,
-    gap: 15,
-  },
-  mainAction: {
-    borderRadius: 20,
+  wideAction: {
+    width: '100%',
+    height: SQUARE_SIZE * 0.8,
+    borderRadius: 24,
+    marginBottom: 20,
     overflow: 'hidden',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 5,
   },
-  gradientCard: {
-    padding: 25,
+  wideGradient: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 15,
-  },
-  actionText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  secondaryAction: {
-    backgroundColor: '#F2F2F7',
-    padding: 20,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  secondaryActionText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1C1C1E',
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    paddingHorizontal: 25,
   },
-  sectionTitle: {
+  wideContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  wideTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1C1C1E',
+    color: '#fff',
   },
-  seeAll: {
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-  friendsScroll: {
-    marginHorizontal: -20,
-    paddingHorizontal: 20,
-  },
-  friendPlaceholder: {
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  badge: {
+    backgroundColor: '#FF3B30',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
-  avatarText: {
+  badgeText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
   },
-  friendName: {
-    fontSize: 12,
-    color: '#3C3C43',
+  footer: {
+    marginTop: 20,
+    paddingHorizontal: 30,
   },
-  addFriend: {
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  addFriendInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: '#E5E5EA',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  emptyContainer: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 20,
-    padding: 40,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  emptyText: {
-    marginTop: 10,
+  footerText: {
+    fontSize: 14,
     color: '#8E8E93',
-    fontSize: 16,
+    fontStyle: 'italic',
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  buttonEmpty: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 25,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  buttonEmptyText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    lineHeight: 20,
   },
 });
 

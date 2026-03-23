@@ -9,6 +9,7 @@ import ExpensesScreen from '../screens/ExpensesScreen';
 import VaultScreen from '../screens/VaultScreen';
 import StartScreen from '../screens/StartScreen';
 import CreateTripScreen from '../screens/CreateTripScreen';
+import JoinTripScreen from '../screens/JoinTripScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -50,6 +51,7 @@ const AppNavigator = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Start" component={StartScreen} />
       <Stack.Screen name="CreateTrip" component={CreateTripScreen} />
+      <Stack.Screen name="JoinTrip" component={JoinTripScreen} />
       <Stack.Screen name="MainTabs" component={MainTabs} />
     </Stack.Navigator>
   );
