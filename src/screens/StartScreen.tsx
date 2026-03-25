@@ -5,31 +5,32 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView, 
-  SafeAreaView,
   Dimensions,
   Image
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
-const SQUARE_SIZE = (width - 60) / 2; // Margen de 20 a los lados y 20 entre ellos
+const SQUARE_SIZE = (width - 60) / 2;
 
 const StartScreen = () => {
   const navigation = useNavigation<any>();
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Botón de Ajustes (Top Right) */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.settingsButton} onPress={() => {}}>
+        <TouchableOpacity 
+          style={styles.settingsButton} 
+          onPress={() => navigation.navigate('Settings')}
+        >
           <Ionicons name="settings-outline" size={28} color="#1C1C1E" />
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Logo Placeholder */}
         <View style={styles.logoContainer}>
           <LinearGradient
             colors={['#007AFF', '#00C6FF']}
@@ -40,7 +41,6 @@ const StartScreen = () => {
           <Text style={styles.logoText}>MyTrip</Text>
         </View>
 
-        {/* Fila de Cuadrados (Crear y Unirse) */}
         <View style={styles.gridRow}>
           <TouchableOpacity 
             style={[styles.squareAction, { backgroundColor: '#F2F2F7' }]} 
@@ -59,7 +59,6 @@ const StartScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Rectángulo de Social */}
         <TouchableOpacity style={styles.wideAction} onPress={() => {}}>
           <LinearGradient
             colors={['#5856D6', '#8E8DFF']}
@@ -75,7 +74,6 @@ const StartScreen = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Rectángulo de Mis Viajes */}
         <TouchableOpacity style={styles.wideAction} onPress={() => {}}>
           <View style={[styles.wideGradient, { backgroundColor: '#1C1C1E' }]}>
             <View style={styles.wideContent}>
@@ -88,7 +86,6 @@ const StartScreen = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Footer info or Quote */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>"El mundo es un libro y aquellos que no viajan solo leen una página."</Text>
         </View>
@@ -132,11 +129,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#007AFF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
   logoText: {
     fontSize: 28,
@@ -158,11 +150,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
   squareTitle: {
     fontSize: 16,
@@ -175,11 +162,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     marginBottom: 20,
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
   },
   wideGradient: {
     flex: 1,

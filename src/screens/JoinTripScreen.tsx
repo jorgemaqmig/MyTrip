@@ -5,12 +5,12 @@ import {
   StyleSheet, 
   TextInput, 
   TouchableOpacity, 
-  SafeAreaView, 
   KeyboardAvoidingView, 
   Platform,
   TouchableWithoutFeedback,
   Keyboard
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,17 +19,11 @@ const JoinTripScreen = () => {
   const navigation = useNavigation<any>();
   const [code, setCode] = useState('');
 
-  const handleJoin = () => {
-    // Prototipo: Navegamos directamente.
-    // En el futuro validaremos el código contra Firebase.
-    navigation.navigate('MainTabs');
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={{ flex: 1 }}
+        style={styles.flexOne}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.inner}>
@@ -71,7 +65,7 @@ const JoinTripScreen = () => {
             <View style={styles.footer}>
               <TouchableOpacity 
                 style={styles.joinButton} 
-                onPress={handleJoin}
+                onPress={() => navigation.navigate('MainTabs')}
                 disabled={code.length < 4}
               >
                 <LinearGradient
@@ -91,95 +85,24 @@ const JoinTripScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  inner: {
-    flex: 1,
-    padding: 24,
-  },
-  backButton: {
-    marginBottom: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-  },
-  header: {
-    marginBottom: 48,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#8E8E93',
-    lineHeight: 22,
-  },
-  content: {
-    flex: 1,
-  },
-  inputGroup: {
-    gap: 12,
-    marginBottom: 32,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3A3A3C',
-    marginLeft: 4,
-  },
-  codeInput: {
-    backgroundColor: '#F2F2F7',
-    padding: 24,
-    borderRadius: 20,
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-    textAlign: 'center',
-    letterSpacing: 4,
-  },
-  helperText: {
-    fontSize: 13,
-    color: '#8E8E93',
-    textAlign: 'center',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#F8F9FB',
-    padding: 16,
-    borderRadius: 16,
-    gap: 12,
-    alignItems: 'center',
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#8E8E93',
-    lineHeight: 20,
-  },
-  footer: {
-    marginBottom: 20,
-  },
-  joinButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  gradientButton: {
-    paddingVertical: 18,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-  joinButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  flexOne: { flex: 1 },
+  inner: { flex: 1, padding: 24 },
+  backButton: { marginBottom: 20, width: 40, height: 40, justifyContent: 'center' },
+  header: { marginBottom: 48 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 8 },
+  subtitle: { fontSize: 16, color: '#8E8E93', lineHeight: 22 },
+  content: { flex: 1 },
+  inputGroup: { gap: 12, marginBottom: 32 },
+  label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C', marginLeft: 4 },
+  codeInput: { backgroundColor: '#F2F2F7', padding: 24, borderRadius: 20, fontSize: 32, fontWeight: 'bold', color: '#1C1C1E', textAlign: 'center', letterSpacing: 4 },
+  helperText: { fontSize: 13, color: '#8E8E93', textAlign: 'center' },
+  infoBox: { flexDirection: 'row', backgroundColor: '#F8F9FB', padding: 16, borderRadius: 16, gap: 12, alignItems: 'center' },
+  infoText: { flex: 1, fontSize: 14, color: '#8E8E93', lineHeight: 20 },
+  footer: { marginBottom: 20 },
+  joinButton: { borderRadius: 20, overflow: 'hidden' },
+  gradientButton: { paddingVertical: 18, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
+  joinButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 });
 
 export default JoinTripScreen;
