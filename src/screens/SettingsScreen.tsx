@@ -14,8 +14,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
+import { authService } from '../services/authService';
+import { Alert } from 'react-native';
+
 const SettingsScreen = () => {
   const navigation = useNavigation<any>();
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigation.navigate('Login');
+    } catch (e: any) {
+      Alert.alert('Error', 'No se pudo cerrar sesión');
+    }
+  };
 
   const SettingItem = ({ icon, title, subtitle, color, isDestructive = false }: any) => (
     <TouchableOpacity style={styles.settingItem}>
@@ -112,6 +124,13 @@ const SettingsScreen = () => {
               title="Eliminar Cuenta" 
               subtitle="Esta acción no se puede deshacer"
               isDestructive={true}
+            />
+            <View style={styles.separator} />
+            <SettingItem 
+              icon="log-out-outline" 
+              title="Cerrar Sesión" 
+              color="#FF3B30"
+              onPress={handleLogout}
             />
           </View>
         </View>

@@ -15,11 +15,33 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+import { authService } from '../services/authService';
+import { Alert, ActivityIndicator } from 'react-native';
+
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Por favor, rellena todos los campos');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.login(email, password);
+      // navigation.navigate('Start'); // El AuthContext se encargará de esto si queremos, pero por ahora lo dejamos así o navegamos manual
+      navigation.navigate('Start');
+    } catch (error: any) {
+      Alert.alert('Error de acceso', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -89,7 +111,8 @@ const LoginScreen = () => {
 
               <TouchableOpacity 
                 style={styles.loginButton}
-                onPress={() => navigation.navigate('Start')}
+                onPress={handleLogin}
+                disabled={loading}
               >
                 <LinearGradient
                   colors={['#007AFF', '#00C6FF']}
@@ -97,7 +120,11 @@ const LoginScreen = () => {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                 >
-                  <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
             </View>

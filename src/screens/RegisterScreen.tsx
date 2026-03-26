@@ -16,6 +16,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+import { authService } from '../services/authService';
+import { Alert, ActivityIndicator } from 'react-native';
+
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
   const [name, setName] = useState('');
@@ -23,6 +26,36 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Todos los campos son obligatorios');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.register(email, password, name);
+      Alert.alert('¡Éxito!', 'Cuenta creada correctamente', [
+        { text: 'OK', onPress: () => navigation.navigate('Start') }
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error al registrar', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -121,7 +154,8 @@ const RegisterScreen = () => {
 
                 <TouchableOpacity 
                   style={styles.registerButton}
-                  onPress={() => navigation.navigate('Start')}
+                  onPress={handleRegister}
+                  disabled={loading}
                 >
                   <LinearGradient
                     colors={['#5856D6', '#8E8DFF']}
@@ -129,7 +163,11 @@ const RegisterScreen = () => {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                   >
-                    <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.registerButtonText}>Crear Cuenta</Text>
+                    )}
                   </LinearGradient>
                 </TouchableOpacity>
 

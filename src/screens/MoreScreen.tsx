@@ -10,8 +10,20 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+import { authService } from '../services/authService';
+import { Alert } from 'react-native';
+
 const MoreScreen = () => {
   const navigation = useNavigation<any>();
+
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      navigation.navigate('Login');
+    } catch (e: any) {
+      Alert.alert('Error', 'No se pudo cerrar sesión');
+    }
+  };
 
   const MenuItem = ({ icon, title, subtitle, onPress, color }: any) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
@@ -75,9 +87,9 @@ const MoreScreen = () => {
             <View style={styles.separator} />
             <MenuItem 
               icon="exit-outline" 
-              title="Abandonar Viaje" 
+              title="Cerrar Sesión" 
               color="#FF3B30"
-              onPress={() => navigation.navigate('Start')}
+              onPress={handleLogout}
             />
           </View>
         </View>
