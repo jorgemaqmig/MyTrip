@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 
 // Tu configuración de Firebase desde variables de entorno (.env)
 // Si no se detectan, el SDK de Firebase lanzará un error descriptivo al usarse.
@@ -21,6 +20,5 @@ const app = initializeApp(firebaseConfig);
 // Inicializar y exportar servicios
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 
 export default app;

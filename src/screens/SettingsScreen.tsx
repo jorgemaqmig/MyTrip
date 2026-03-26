@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView,
-  Dimensions
+  Dimensions,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 
 const SettingsScreen = () => {
   const navigation = useNavigation<any>();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -31,8 +32,8 @@ const SettingsScreen = () => {
     }
   };
 
-  const SettingItem = ({ icon, title, subtitle, color, isDestructive = false }: any) => (
-    <TouchableOpacity style={styles.settingItem}>
+  const SettingItem = ({ icon, title, subtitle, color, isDestructive = false, onPress }: any) => (
+    <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={[styles.iconContainer, { backgroundColor: isDestructive ? '#FFF0F0' : '#F2F2F7' }]}>
         <Ionicons name={icon} size={22} color={isDestructive ? '#FF3B30' : color || '#007AFF'} />
       </View>
@@ -60,17 +61,25 @@ const SettingsScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={['#007AFF', '#00C6FF']}
-              style={styles.avatarGradient}
+            {userData?.photoURL ? (
+              <Image source={{ uri: userData.photoURL }} style={{ width: 100, height: 100, borderRadius: 50 }} />
+            ) : (
+              <LinearGradient
+                colors={['#007AFF', '#00C6FF']}
+                style={styles.avatarGradient}
+              >
+                <Ionicons name="person" size={50} color="#fff" />
+              </LinearGradient>
+            )}
+            <TouchableOpacity 
+              style={styles.editAvatarButton}
+              onPress={() => navigation.navigate('EditProfile')}
             >
-              <Ionicons name="person" size={50} color="#fff" />
-            </LinearGradient>
-            <TouchableOpacity style={styles.editAvatarButton}>
               <Ionicons name="camera" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
           <Text style={styles.userName}>{user?.displayName || 'Viajero'}</Text>
+
           <Text style={styles.userEmail}>{user?.email || ''}</Text>
         </View>
 
@@ -80,8 +89,9 @@ const SettingsScreen = () => {
             <SettingItem 
               icon="person-outline" 
               title="Editar Perfil" 
-              subtitle="Nombre, usuario y biografía"
+              subtitle="Nombre, foto y biografía"
               color="#007AFF"
+              onPress={() => navigation.navigate('EditProfile')}
             />
             <View style={styles.separator} />
             <SettingItem 
@@ -89,6 +99,7 @@ const SettingsScreen = () => {
               title="Correo Electrónico" 
               subtitle={user?.email || ''}
               color="#32ADE6"
+              onPress={() => navigation.navigate('EditEmail')}
             />
             <View style={styles.separator} />
             <SettingItem 
@@ -96,6 +107,7 @@ const SettingsScreen = () => {
               title="Seguridad" 
               subtitle="Cambiar contraseña"
               color="#5856D6"
+              onPress={() => navigation.navigate('Security')}
             />
           </View>
         </View>

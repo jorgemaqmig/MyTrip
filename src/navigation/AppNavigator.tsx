@@ -16,6 +16,9 @@ import SocialScreen from '../screens/SocialScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import MyTripsScreen from '../screens/MyTripsScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import EditEmailScreen from '../screens/EditEmailScreen';
+import SecurityScreen from '../screens/SecurityScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -76,6 +79,9 @@ const AppNavigator = () => {
       <Stack.Screen name="Social" component={SocialScreen} />
       <Stack.Screen name="MyTrips" component={MyTripsScreen} />
       <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="EditEmail" component={EditEmailScreen} />
+      <Stack.Screen name="Security" component={SecurityScreen} />
     </Stack.Navigator>
   );
 };
