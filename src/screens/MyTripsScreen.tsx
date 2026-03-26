@@ -6,69 +6,107 @@ import {
   TouchableOpacity, 
   FlatList, 
   SafeAreaView,
-  Dimensions
+  Dimensions,
+  ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
+import { tripService, Trip } from '../services/tripService';
+import { useCallback } from 'react';
 
 const { width } = Dimensions.get('window');
 
 const MyTripsScreen = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' o 'past'
+  const { user } = useAuth();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const upcomingTrips = [
-    { id: '1', title: 'Verano en Menorca', location: 'Islas Baleares, ES', dates: '15 Jul - 22 Jul', status: 'Próximamente', participants: 4, color: ['#007AFF', '#00C6FF'] },
-    { id: '2', title: 'Navidad en Londres', location: 'Reino Unido', dates: '20 Dic - 27 Dic', status: 'Planeado', participants: 2, color: ['#5856D6', '#8E8DFF'] },
-  ];
+  const loadTrips = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const userTrips = await tripService.getUserTrips(user.uid);
+      setTrips(userTrips);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const pastTrips = [
-    { id: '3', title: 'Safari en Kenia', location: 'África', dates: '10 Feb - 20 Feb, 2025', status: 'Finalizado', participants: 5, color: ['#FF9500', '#FFCC00'] },
-    { id: '4', title: 'Escapada a París', location: 'Francia', dates: '05 Ene - 08 Ene, 2025', status: 'Finalizado', participants: 2, color: ['#FF3B30', '#FF7A7A'] },
-  ];
-
-  const renderTripCard = ({ item }: any) => (
-    <TouchableOpacity 
-      style={styles.tripCard}
-      onPress={() => navigation.navigate('MainTabs')}
-    >
-      <LinearGradient
-        colors={item.color}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.cardHeader}
-      >
-        <Ionicons name="airplane" size={30} color="#fff" />
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>{item.status}</Text>
-        </View>
-      </LinearGradient>
-      
-      <View style={styles.cardBody}>
-        <View style={styles.mainInfo}>
-          <Text style={styles.tripTitle}>{item.title}</Text>
-          <View style={styles.locationRow}>
-            <Ionicons name="location" size={14} color="#8E8E93" />
-            <Text style={styles.tripLocation}>{item.location}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.divider} />
-        
-        <View style={styles.cardFooter}>
-          <View style={styles.footerItem}>
-            <Ionicons name="calendar-outline" size={16} color="#007AFF" />
-            <Text style={styles.footerLabel}>{item.dates}</Text>
-          </View>
-          <View style={styles.footerItem}>
-            <Ionicons name="people-outline" size={16} color="#007AFF" />
-            <Text style={styles.footerLabel}>{item.participants} per.</Text>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
+  useFocusEffect(
+    useCallback(() => {
+      loadTrips();
+    }, [user])
   );
+
+  const today = new Date().toISOString().split('T')[0];
+  const upcomingTrips = trips.filter(t => t.endDate >= today);
+  const pastTrips = trips.filter(t => t.endDate < today);
+
+  const getTripColor = (index: number) => {
+    const colors = [
+      ['#007AFF', '#00C6FF'],
+      ['#5856D6', '#8E8DFF'],
+      ['#FF9500', '#FFCC00'],
+      ['#FF3B30', '#FF7A7A'],
+      ['#34C759', '#53E079']
+    ] as const;
+    return colors[index % colors.length] as readonly [string, string, ...string[]];
+  };
+
+  const renderTripCard = ({ item, index }: any) => {
+    const color = getTripColor(index);
+    const dateStr = item.startDate && item.endDate 
+      ? `${item.startDate.slice(5)} - ${item.endDate.slice(5)}` 
+      : (item.startDate || item.dates);
+      
+    return (
+      <TouchableOpacity 
+        style={styles.tripCard}
+        onPress={() => navigation.navigate('MainTabs')}
+      >
+        <LinearGradient
+          colors={color}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cardHeader}
+        >
+          <Ionicons name="airplane" size={30} color="#fff" />
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>{item.status}</Text>
+          </View>
+        </LinearGradient>
+        
+        <View style={styles.cardBody}>
+          <View style={styles.mainInfo}>
+            <Text style={styles.tripTitle}>{item.title || item.name}</Text>
+            <View style={styles.locationRow}>
+              <Ionicons name="location" size={14} color="#8E8E93" />
+              <Text style={styles.tripLocation}>{item.location}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.divider} />
+          
+          <View style={styles.cardFooter}>
+            <View style={styles.footerItem}>
+              <Ionicons name="calendar-outline" size={16} color="#007AFF" />
+              <Text style={styles.footerLabel}>{dateStr}</Text>
+            </View>
+            <View style={styles.footerItem}>
+              <Ionicons name="people-outline" size={16} color="#007AFF" />
+              <Text style={styles.footerLabel}>{item.numPeople || item.participants} per.</Text>
+            </View>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,25 +141,31 @@ const MyTripsScreen = () => {
       </View>
 
       {/* Listado de Viajes */}
-      <FlatList
-        data={activeTab === 'upcoming' ? upcomingTrips : pastTrips}
-        renderItem={renderTripCard}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="trail-sign-outline" size={80} color="#D1D1D6" />
-            <Text style={styles.emptyText}>No hay viajes en esta sección</Text>
-            <TouchableOpacity 
-              style={styles.emptyButton}
-              onPress={() => navigation.navigate('CreateTrip')}
-            >
-              <Text style={styles.emptyButtonText}>Crear mi primer viaje</Text>
-            </TouchableOpacity>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : (
+        <FlatList
+          data={activeTab === 'upcoming' ? upcomingTrips : pastTrips}
+          renderItem={renderTripCard}
+          keyExtractor={(item) => (item.id as string) || Math.random().toString()}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="trail-sign-outline" size={80} color="#D1D1D6" />
+              <Text style={styles.emptyText}>No hay viajes en esta sección</Text>
+              <TouchableOpacity 
+                style={styles.emptyButton}
+                onPress={() => navigation.navigate('CreateTrip')}
+              >
+                <Text style={styles.emptyButtonText}>Crear mi primer viaje</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };

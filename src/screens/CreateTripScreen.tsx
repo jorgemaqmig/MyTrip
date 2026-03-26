@@ -16,6 +16,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { tripService } from '../services/tripService';
 
 LocaleConfig.locales['es'] = {
   monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
@@ -28,16 +31,44 @@ LocaleConfig.defaultLocale = 'es';
 
 const CreateTripScreen = () => {
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
+  
   const [name, setName] = useState('');
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [numPeople, setNumPeople] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectingStartDate, setSelectingStartDate] = useState(true);
+
+  const handleCreateTrip = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Debes iniciar sesión para crear un viaje');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      await tripService.createTrip({
+        userId: user.uid,
+        name,
+        location: query, // o location si se seleccionó de sugerencias
+        startDate,
+        endDate,
+        numPeople,
+        status: 'Planeado'
+      });
+      navigation.navigate('MainTabs');
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo crear el viaje');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -182,15 +213,21 @@ const CreateTripScreen = () => {
           <View style={styles.footer}>
             <TouchableOpacity 
               style={styles.createButton} 
-              onPress={() => navigation.navigate('MainTabs')}
-              disabled={!isFormValid}
+              onPress={handleCreateTrip}
+              disabled={!isFormValid || creating}
             >
               <LinearGradient
-                colors={!isFormValid ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+                colors={(!isFormValid || creating) ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
                 style={styles.gradientButton}
               >
-                <Text style={styles.createButtonText}>Crear Viaje</Text>
-                <Ionicons name="airplane-outline" size={20} color="#fff" />
+                {creating ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.createButtonText}>Crear Viaje</Text>
+                    <Ionicons name="airplane-outline" size={20} color="#fff" />
+                  </>
+                )}
               </LinearGradient>
             </TouchableOpacity>
           </View>

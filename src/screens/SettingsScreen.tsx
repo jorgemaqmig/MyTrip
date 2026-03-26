@@ -16,9 +16,11 @@ const { width } = Dimensions.get('window');
 
 import { authService } from '../services/authService';
 import { Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 const SettingsScreen = () => {
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -68,8 +70,8 @@ const SettingsScreen = () => {
               <Ionicons name="camera" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.userName}>Usuario Demo</Text>
-          <Text style={styles.userEmail}>usuario@mytrip.com</Text>
+          <Text style={styles.userName}>{user?.displayName || 'Viajero'}</Text>
+          <Text style={styles.userEmail}>{user?.email || ''}</Text>
         </View>
 
         <View style={styles.section}>
@@ -85,7 +87,7 @@ const SettingsScreen = () => {
             <SettingItem 
               icon="mail-outline" 
               title="Correo Electrónico" 
-              subtitle="usuario@mytrip.com"
+              subtitle={user?.email || ''}
               color="#32ADE6"
             />
             <View style={styles.separator} />
