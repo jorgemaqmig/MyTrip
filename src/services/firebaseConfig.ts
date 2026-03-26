@@ -1,31 +1,25 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  initializeAuth, 
-  getReactNativePersistence 
-} from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Tu configuración de Firebase
+// Tu configuración de Firebase desde variables de entorno (.env)
+// Si no se detectan, el SDK de Firebase lanzará un error descriptivo al usarse.
 const firebaseConfig = {
-  apiKey: "AIzaSyBux5CXsDIbJ4gc8aLaKzoJdc3gnYg8VuA",
-  authDomain: "mytrip-d4dcb.firebaseapp.com",
-  projectId: "mytrip-d4dcb",
-  storageBucket: "mytrip-d4dcb.firebasestorage.app",
-  messagingSenderId: "941204475296",
-  appId: "1:941204475296:web:7deef6fd29713061cda8c5",
-  measurementId: "G-RJ25BF646J"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || ""
 };
 
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializar servicios con persistencia específica para React Native
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
-
+// Inicializar y exportar servicios
+export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
