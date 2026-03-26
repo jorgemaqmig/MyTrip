@@ -12,6 +12,10 @@ import CreateTripScreen from '../screens/CreateTripScreen';
 import JoinTripScreen from '../screens/JoinTripScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import MoreScreen from '../screens/MoreScreen';
+import SocialScreen from '../screens/SocialScreen';
+import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
+import MyTripsScreen from '../screens/MyTripsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -59,11 +63,18 @@ const MainTabs = () => {
 
 const AppNavigator = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator 
+      initialRouteName="Login"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="Start" component={StartScreen} />
       <Stack.Screen name="CreateTrip" component={CreateTripScreen} />
       <Stack.Screen name="JoinTrip" component={JoinTripScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Social" component={SocialScreen} />
+      <Stack.Screen name="MyTrips" component={MyTripsScreen} />
       <Stack.Screen name="MainTabs" component={MainTabs} />
     </Stack.Navigator>
   );

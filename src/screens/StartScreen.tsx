@@ -59,7 +59,7 @@ const StartScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.wideAction} onPress={() => {}}>
+        <TouchableOpacity style={styles.wideAction} onPress={() => navigation.navigate('Social')}>
           <LinearGradient
             colors={['#5856D6', '#8E8DFF']}
             style={styles.wideGradient}
@@ -74,7 +74,7 @@ const StartScreen = () => {
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.wideAction} onPress={() => {}}>
+        <TouchableOpacity style={styles.wideAction} onPress={() => navigation.navigate('MyTrips')}>
           <View style={[styles.wideGradient, { backgroundColor: '#1C1C1E' }]}>
             <View style={styles.wideContent}>
               <Ionicons name="journal-outline" size={28} color="#fff" />
