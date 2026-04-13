@@ -11,10 +11,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import { authService } from '../services/authService';
+import { tripService } from '../services/tripService';
+import { useTrip } from '../context/TripContext';
 import { Alert } from 'react-native';
 
 const MoreScreen = () => {
   const navigation = useNavigation<any>();
+  const { activeTrip, setActiveTrip } = useTrip();
 
   const handleLogout = async () => {
     try {
@@ -23,6 +26,31 @@ const MoreScreen = () => {
     } catch (e: any) {
       Alert.alert('Error', 'No se pudo cerrar sesión');
     }
+  };
+
+  const handleDeleteTrip = () => {
+    if (!activeTrip?.id) return;
+
+    Alert.alert(
+      'Eliminar Viaje',
+      '¿Estás seguro de que quieres eliminar este viaje? Esta acción no se puede deshacer.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Eliminar', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await tripService.deleteTrip(activeTrip.id!);
+              setActiveTrip(null);
+              navigation.navigate('Start');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar el viaje');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const MenuItem = ({ icon, title, subtitle, onPress, color }: any) => (
@@ -83,6 +111,14 @@ const MoreScreen = () => {
               subtitle="Nombre, fechas y participantes"
               color="#8E8E93"
               onPress={() => {}}
+            />
+            <View style={styles.separator} />
+            <MenuItem 
+              icon="trash-outline" 
+              title="Eliminar Viaje" 
+              subtitle="Esta acción no se puede deshacer"
+              color="#FF3B30"
+              onPress={handleDeleteTrip}
             />
             <View style={styles.separator} />
             <MenuItem 

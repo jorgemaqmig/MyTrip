@@ -55,5 +55,16 @@ export const tripService = {
       console.error("Error getting documents: ", error);
       throw error;
     }
+  },
+
+  // Eliminar un viaje
+  deleteTrip: async (tripId: string) => {
+    try {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'trips', tripId));
+    } catch (error: any) {
+      console.error("Error deleting document: ", error);
+      throw error;
+    }
   }
 };
