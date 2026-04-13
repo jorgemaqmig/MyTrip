@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useTrip } from '../context/TripContext';
 import { tripService, Trip } from '../services/tripService';
 import { useCallback } from 'react';
 
@@ -22,6 +23,7 @@ const MyTripsScreen = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' o 'past'
   const { user } = useAuth();
+  const { setActiveTrip } = useTrip();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +70,10 @@ const MyTripsScreen = () => {
     return (
       <TouchableOpacity 
         style={styles.tripCard}
-        onPress={() => navigation.navigate('MainTabs')}
+        onPress={() => {
+          setActiveTrip(item);
+          navigation.navigate('MainTabs');
+        }}
       >
         <LinearGradient
           colors={color}

@@ -6,6 +6,8 @@ export interface Trip {
   userId: string;
   name: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   startDate: string;
   endDate: string;
   numPeople: number;

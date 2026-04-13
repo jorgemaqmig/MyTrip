@@ -1,23 +1,43 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTrip } from '../context/TripContext';
 
 const MapScreen = () => {
   const navigation = useNavigation<any>();
+  const { activeTrip } = useTrip();
+
+  // Si el viaje no tiene coordenadas exactas (creados antes del update), usar Madrid por defecto.
+  const initialRegion = {
+    latitude: activeTrip?.latitude || 40.4168,
+    longitude: activeTrip?.longitude || -3.7038,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
+  };
+
   return (
     <View style={styles.container}>
       <MapView
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
-        initialRegion={{
-          latitude: 40.4168,
-          longitude: -3.7038,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
-      />
+        initialRegion={initialRegion}
+      >
+        {activeTrip?.latitude && activeTrip?.longitude && (
+          <Marker
+            coordinate={{
+              latitude: activeTrip.latitude,
+              longitude: activeTrip.longitude
+            }}
+            title={activeTrip.location}
+            description="Destino del viaje"
+          />
+        )}
+      </MapView>
+
       <View style={styles.overlay}>
-        <Text style={styles.title}>Mapa de Viaje</Text>
+        <Text style={styles.title}>{activeTrip?.name || 'Mapa de Viaje'}</Text>
+        <Text style={styles.subtitle}>{activeTrip?.location || 'Destino'}</Text>
       </View>
 
       {/* Botón para volver al inicio */}
@@ -28,6 +48,7 @@ const MapScreen = () => {
         <Ionicons name="chevron-back" size={28} color="#1C1C1E" />
       </TouchableOpacity>
     </View>
+
   );
 };
 
@@ -51,6 +72,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
   },
   backButton: {
     position: 'absolute',

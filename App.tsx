@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 
 import { AuthProvider } from './src/context/AuthContext';
+import { TripProvider } from './src/context/TripContext';
 import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
@@ -12,11 +13,14 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <NavigationContainer>
-            <AppNavigator />
-          </NavigationContainer>
-          <StatusBar style="auto" />
+          <TripProvider>
+            <NavigationContainer>
+              <AppNavigator />
+            </NavigationContainer>
+            <StatusBar style="auto" />
+          </TripProvider>
         </AuthProvider>
+
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -9,7 +9,8 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
-  Modal
+  Modal,
+  LogBox
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +19,12 @@ import { useNavigation } from '@react-navigation/native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useTrip } from '../context/TripContext';
 import { tripService } from '../services/tripService';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
 
 LocaleConfig.locales['es'] = {
   monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
@@ -29,15 +35,17 @@ LocaleConfig.locales['es'] = {
 };
 LocaleConfig.defaultLocale = 'es';
 
+LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
+
 const CreateTripScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const { setActiveTrip } = useTrip();
   
   const [name, setName] = useState('');
-  const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
   const [creating, setCreating] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -53,44 +61,30 @@ const CreateTripScreen = () => {
 
     setCreating(true);
     try {
-      await tripService.createTrip({
+      const tripData = {
         userId: user.uid,
         name,
-        location: query, // o location si se seleccionó de sugerencias
+        location,
+        latitude,
+        longitude,
         startDate,
         endDate,
         numPeople,
-        status: 'Planeado'
+        status: 'Planeado' as const,
+      };
+      const tripId = await tripService.createTrip(tripData);
+      
+      setActiveTrip({
+        id: tripId,
+        createdAt: new Date(),
+        ...tripData
       });
+
       navigation.navigate('MainTabs');
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo crear el viaje');
     } finally {
       setCreating(false);
-    }
-  };
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (query.length > 2) {
-        searchLocation(query);
-      } else {
-        setSuggestions([]);
-      }
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [query]);
-
-  const searchLocation = async (text: string) => {
-    setLoading(true);
-    try {
-      const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(text)}&addressdetails=1&limit=5`);
-      const data = await resp.json();
-      setSuggestions(data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -109,7 +103,7 @@ const CreateTripScreen = () => {
   if (startDate) markedDates[startDate] = { selected: true, startingDay: true, color: '#007AFF' };
   if (endDate) markedDates[endDate] = { selected: true, endingDay: true, color: '#007AFF' };
 
-  const isFormValid = name && query && startDate && endDate;
+  const isFormValid = name && location && startDate && endDate;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -138,37 +132,46 @@ const CreateTripScreen = () => {
               />
             </View>
 
-            <View style={styles.inputGroup}>
+            <View style={[styles.inputGroup, { zIndex: 10 }]}>
               <Text style={styles.label}>Lugar</Text>
-              <View style={styles.inputIconContainer}>
-                <Ionicons name="location-outline" size={20} color="#007AFF" style={styles.icon} />
-                <TextInput
-                  style={[styles.input, styles.inputWithIcon]}
-                  placeholder="¿A dónde vamos?"
-                  value={query}
-                  onChangeText={setQuery}
-                />
-                {loading ? <ActivityIndicator style={styles.loader} size="small" color="#007AFF" /> : null}
-              </View>
-              
-              {suggestions.length > 0 ? (
-                <View style={styles.suggestionsContainer}>
-                  {suggestions.map((item, idx) => (
-                    <TouchableOpacity 
-                      key={idx} 
-                      style={styles.suggestionItem}
-                      onPress={() => {
-                        setLocation(item.display_name);
-                        setQuery(item.display_name);
-                        setSuggestions([]);
-                      }}
-                    >
-                      <Ionicons name="pin-outline" size={16} color="#8E8E93" />
-                      <Text style={styles.suggestionText} numberOfLines={1}>{item.display_name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ) : null}
+              <GooglePlacesAutocomplete
+                placeholder="¿A dónde vamos?"
+                onPress={(data, details = null) => {
+                  setLocation(data.description);
+                  if (details?.geometry?.location) {
+                    setLatitude(details.geometry.location.lat);
+                    setLongitude(details.geometry.location.lng);
+                  }
+                }}
+                query={{
+                  key: GOOGLE_MAPS_API_KEY,
+                  language: 'es',
+                }}
+                styles={{
+                  textInputContainer: {
+                    backgroundColor: '#F2F2F7',
+                    borderRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  },
+                  textInput: {
+                    height: 50,
+                    backgroundColor: 'transparent',
+                    color: '#1C1C1E',
+                    fontSize: 16,
+                    paddingHorizontal: 15,
+                    marginBottom: 0,
+                  },
+                  predefinedPlacesDescription: {
+                    color: '#1faadb',
+                  },
+                }}
+                enablePoweredByContainer={false}
+                fetchDetails={true}
+                textInputProps={{
+                  placeholderTextColor: '#8E8E93',
+                }}
+              />
             </View>
 
             <View style={styles.dateContainer}>
@@ -273,17 +276,6 @@ const styles = StyleSheet.create({
   inputGroup: { gap: 8 },
   label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C' },
   input: { backgroundColor: '#F2F2F7', padding: 16, borderRadius: 12, fontSize: 16, color: '#1C1C1E' },
-  inputIconContainer: { position: 'relative', justifyContent: 'center' },
-  inputWithIcon: { paddingLeft: 40 },
-  icon: { position: 'absolute', left: 12, zIndex: 1 },
-  loader: { position: 'absolute', right: 12 },
-  suggestionsContainer: {
-    backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: '#F2F2F7',
-    marginTop: 4, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, shadowRadius: 4,
-  },
-  suggestionItem: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderBottomWidth: 1, borderBottomColor: '#F2F2F7' },
-  suggestionText: { fontSize: 14, color: '#1C1C1E', flex: 1 },
   dateContainer: { flexDirection: 'row', gap: 16 },
   datePicker: { flex: 1, backgroundColor: '#F2F2F7', padding: 16, borderRadius: 12, gap: 8 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
