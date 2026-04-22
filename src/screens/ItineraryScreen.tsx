@@ -1,16 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTrip } from '../context/TripContext';
 import { tripService, TripPoint } from '../services/tripService';
+import { NestableScrollContainer, NestableDraggableFlatList, ScaleDecorator } from 'react-native-draggable-flatlist';
 
 const ItineraryScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip } = useTrip();
   
   const [points, setPoints] = useState<TripPoint[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [editDay, setEditDay] = useState<number | null>(null);
+  const [localDayPoints, setLocalDayPoints] = useState<TripPoint[]>([]);
 
   const fetchPoints = async () => {
     if (!activeTrip?.id) return;
@@ -19,8 +21,6 @@ const ItineraryScreen = () => {
       setPoints(p);
     } catch (e) {
       console.error(e);
-    } finally {
-      setRefreshing(false);
     }
   };
 
@@ -30,32 +30,20 @@ const ItineraryScreen = () => {
     }, [activeTrip?.id])
   );
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchPoints();
-  };
-
   const getTripDays = () => {
     if (!activeTrip?.startDate || !activeTrip?.endDate) return [];
-    
     const startParts = activeTrip.startDate.split('-');
     const endParts = activeTrip.endDate.split('-');
-    
     const startD = new Date(parseInt(startParts[0]), parseInt(startParts[1]) - 1, parseInt(startParts[2]));
     const endD = new Date(parseInt(endParts[0]), parseInt(endParts[1]) - 1, parseInt(endParts[2]));
     
     const days = [];
     let currentD = new Date(startD);
     let dayIndex = 1;
-
     while (currentD <= endD) {
       const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
       const dateString = `${currentD.getDate()} ${months[currentD.getMonth()]}`;
-      
-      days.push({
-        index: dayIndex,
-        dateString: dateString
-      });
+      days.push({ index: dayIndex, dateString: dateString });
       currentD.setDate(currentD.getDate() + 1);
       dayIndex++;
     }
@@ -64,10 +52,68 @@ const ItineraryScreen = () => {
 
   const tripDays = getTripDays();
 
-  // Group points by day
-  const unassignedPoints = points.filter(p => p.dayIndex === 0);
-  
-  const renderPoint = (point: TripPoint) => (
+  // --- EDIT MODE LOGIC ---
+  const toggleEditDay = (dayIndex: number) => {
+    if (editDay === dayIndex) {
+      handleSaveOrder(dayIndex);
+    } else {
+      setEditDay(dayIndex);
+      setLocalDayPoints(points.filter(p => p.dayIndex === dayIndex).sort((a,b) => a.order - b.order));
+    }
+  };
+
+  const handleSaveOrder = async (dayIndex: number) => {
+    setEditDay(null);
+    setPoints(prev => [
+      ...prev.filter(p => p.dayIndex !== dayIndex),
+      ...localDayPoints
+    ]);
+
+    if (!activeTrip?.id) return;
+
+    try {
+      // Sincronizar orden
+      for (let i = 0; i < localDayPoints.length; i++) {
+        const p = localDayPoints[i];
+        if (p.order !== i + 1) {
+          await tripService.updateTripPoint(activeTrip.id, p.id!, { order: i + 1 });
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'No se guardó el orden en el servidor.');
+    }
+  };
+
+  const handleDelete = (pointId: string) => {
+    Alert.alert('Eliminar', '¿Quitar sitio?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Eliminar', style: 'destructive', onPress: async () => {
+          if (!activeTrip?.id) return;
+          setLocalDayPoints(prev => prev.filter(p => p.id !== pointId));
+          try {
+            await tripService.deleteTripPoint(activeTrip.id, pointId);
+          } catch (e) {}
+      }}
+    ]);
+  };
+
+  const handleDuplicate = async (point: TripPoint) => {
+    if (!activeTrip?.id) return;
+    const newPoint = { ...point, order: localDayPoints.length + 1 };
+    delete newPoint.id;
+    const tempId = `temp_${Date.now()}`;
+    setLocalDayPoints(prev => [...prev, { ...newPoint, id: tempId }]);
+
+    try {
+      const realId = await tripService.addPointToTrip(activeTrip.id, newPoint);
+      setLocalDayPoints(prev => prev.map(p => p.id === tempId ? { ...p, id: realId } : p));
+    } catch (e) {
+      Alert.alert('Error', 'Fallo al duplicar.');
+    }
+  };
+
+  // --- RENDERERS ---
+  const renderNormalPoint = (point: TripPoint) => (
     <View key={point.id} style={styles.pointCard}>
       <View style={[styles.colorBar, { backgroundColor: point.color }]} />
       <View style={styles.pointInfo}>
@@ -77,6 +123,87 @@ const ItineraryScreen = () => {
     </View>
   );
 
+  const renderDraggablePoint = ({ item, drag, isActive }: any) => {
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity 
+          activeOpacity={1} 
+          onLongPress={drag} 
+          disabled={isActive}
+          style={[styles.draggableRow, isActive && styles.draggableRowActive]}
+        >
+          <View style={styles.dragHandle}>
+            <Ionicons name="reorder-two" size={26} color="#CCC" />
+          </View>
+          
+          <View style={[styles.pointCard, { flex: 1, marginVertical: 0 }]}>
+            <View style={[styles.colorBar, { backgroundColor: item.color }]} />
+            <View style={styles.pointInfo}>
+              <Text style={styles.pointName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.pointAddress} numberOfLines={1}>{item.locationName}</Text>
+            </View>
+          </View>
+          
+          <View style={styles.editActionsGroup}>
+            <TouchableOpacity onPress={() => handleDuplicate(item)} style={styles.miniIconBtn}>
+              <Ionicons name="copy-outline" size={18} color="#0984E3" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.miniIconBtn}>
+              <Ionicons name="trash-outline" size={18} color="#FF6B35" />
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
+  };
+
+  const renderDaySection = (title: string, subtitle: string, dayIndex: number, isUnassigned = false) => {
+    const isEditing = editDay === dayIndex;
+    const dayPoints = isEditing ? localDayPoints : points.filter(p => p.dayIndex === dayIndex).sort((a,b) => a.order - b.order);
+
+    return (
+      <View key={`day-${dayIndex}`} style={[styles.daySection, isEditing && styles.editingSection]}>
+        <View style={styles.dayHeader}>
+          <View style={[styles.dayIcon, { backgroundColor: isUnassigned ? '#33333320' : '#0984E320' }]}>
+            {isUnassigned ? (
+              <Ionicons name="calendar-outline" size={20} color="#333" />
+            ) : (
+              <Text style={styles.dayIconText}>{dayIndex}</Text>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.dayTitle}>{title}</Text>
+            <Text style={styles.daySubtitle}>{subtitle}</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={[styles.dayEditButton, isEditing && styles.daySaveButton]} 
+            onPress={() => toggleEditDay(dayIndex)}
+          >
+            <Ionicons name={isEditing ? "checkmark" : "pencil"} size={22} color={isEditing ? "#FFF" : "#0984E3"} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.pointsList}>
+          {dayPoints.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>Vacío. Añade lugares desde el mapa.</Text>
+            </View>
+          ) : isEditing ? (
+            <NestableDraggableFlatList
+              data={dayPoints}
+              renderItem={renderDraggablePoint}
+              keyExtractor={(item) => item.id!}
+              onDragEnd={({ data }) => setLocalDayPoints(data)}
+            />
+          ) : (
+            dayPoints.map(renderNormalPoint)
+          )}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -84,83 +211,19 @@ const ItineraryScreen = () => {
         <Text style={styles.subtitle}>{activeTrip?.name}</Text>
       </View>
 
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0984E3" />
+      <NestableScrollContainer style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {points.filter(p => p.dayIndex === 0).length > 0 && 
+          renderDaySection("Sin Asignar", "Puntos pendientes", 0, true)
         }
-      >
-        {/* Unassigned Points (Only show if there are any) */}
-        {unassignedPoints.length > 0 && (
-          <View style={styles.daySection}>
-            <View style={styles.dayHeader}>
-              <View style={[styles.dayIcon, { backgroundColor: '#33333320' }]}>
-                <Ionicons name="calendar-outline" size={20} color="#333" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.dayTitle}>Sin Asignar</Text>
-                <Text style={styles.daySubtitle}>Puntos pendientes de organizar</Text>
-              </View>
-              <TouchableOpacity style={styles.dayEditButton}>
-                <Ionicons name="pencil" size={20} color="#0984E3" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.pointsList}>
-              {unassignedPoints.map(renderPoint)}
-            </View>
-          </View>
-        )}
+        {tripDays.map((day) => renderDaySection(`Día ${day.index}`, day.dateString, day.index))}
+        <View style={{height: 100}} />
+      </NestableScrollContainer>
 
-        {/* Assigned Days */}
-        {tripDays.map((day) => {
-          const dayPoints = points.filter(p => p.dayIndex === day.index);
-          
-          return (
-            <View key={day.index} style={styles.daySection}>
-              <View style={styles.dayHeader}>
-                <View style={[styles.dayIcon, { backgroundColor: '#0984E320' }]}>
-                  <Text style={styles.dayIconText}>{day.index}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.dayTitle}>Día {day.index}</Text>
-                  <Text style={styles.daySubtitle}>{day.dateString}</Text>
-                </View>
-                <TouchableOpacity style={styles.dayEditButton}>
-                  <Ionicons name="pencil" size={20} color="#0984E3" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.pointsList}>
-                {dayPoints.length > 0 ? (
-                  dayPoints.map(renderPoint)
-                ) : (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>Día libre. Explora el mapa para añadir lugares.</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          );
-        })}
-        
-        {/* Espacio final */}
-        <View style={{height: 80}} />
-      </ScrollView>
-
-      {/* Botón Flotante para ir al Mapa si no saben qué hacer */}
-      <TouchableOpacity 
-        style={styles.fab} 
-        onPress={() => navigation.navigate('Mapa')}
-      >
+      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('Mapa')}>
         <Ionicons name="map" size={24} color="#FFF" />
       </TouchableOpacity>
 
-      {/* Botón de volver al inicio temporalmente en la esquina */}
-      <TouchableOpacity 
-        style={styles.backButton} 
-        onPress={() => navigation.navigate('Start')}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Start')}>
         <Ionicons name="chevron-down" size={28} color="#1C1C1E" />
       </TouchableOpacity>
     </View>
@@ -199,6 +262,17 @@ const styles = StyleSheet.create({
   daySection: {
     marginBottom: 24,
   },
+  editingSection: {
+    backgroundColor: '#FFF',
+    padding: 12,
+    marginHorizontal: -12,
+    borderRadius: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
   dayHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -229,13 +303,18 @@ const styles = StyleSheet.create({
   },
   dayEditButton: {
     padding: 8,
+    borderRadius: 20,
+  },
+  daySaveButton: {
+    backgroundColor: '#0984E3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   pointsList: {
-    marginLeft: 20, // Identation for the "timeline" feel
+    marginLeft: 20,
     paddingLeft: 20,
     borderLeftWidth: 2,
     borderLeftColor: '#EBEBEB',
-    gap: 12,
   },
   pointCard: {
     backgroundColor: '#FFF',
@@ -250,6 +329,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: '#F0F0F0',
+    marginVertical: 4,
   },
   colorBar: {
     width: 6,
@@ -263,11 +343,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
-    marginBottom: 4,
   },
   pointAddress: {
     fontSize: 12,
     color: '#888',
+    marginTop: 2,
+  },
+  draggableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  draggableRowActive: {
+    opacity: 0.9,
+    transform: [{ scale: 1.03 }],
+  },
+  dragHandle: {
+    padding: 8,
+  },
+  editActionsGroup: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingLeft: 6,
+  },
+  miniIconBtn: {
+    padding: 8,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 15,
   },
   emptyState: {
     paddingVertical: 12,
