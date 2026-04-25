@@ -4,10 +4,18 @@ import {
   signOut,
   updateProfile,
   updateEmail,
-  updatePassword
+  updatePassword,
+  GoogleAuthProvider,
+  signInWithCredential
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+// Configurar Google Sign-In con el Client ID del .env
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
+});
 
 export const authService = {
   // Registro de usuario
@@ -42,10 +50,52 @@ export const authService = {
     }
   },
 
+  // Inicio de sesión y Registro con Google
+  loginWithGoogle: async () => {
+    try {
+      // Comprobar si Google Play Services está disponible
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      // Iniciar el flujo de autenticación nativo
+      const userInfo = await GoogleSignin.signIn();
+      
+      // La API v11+ devuelve userInfo.data.idToken, versiones anteriores userInfo.idToken
+      const idToken = userInfo.data?.idToken || (userInfo as any).idToken;
+
+      if (!idToken) {
+        throw new Error("No se pudo obtener el token de Google");
+      }
+
+      // Crear una credencial de Firebase con el token
+      const credential = GoogleAuthProvider.credential(idToken);
+      
+      // Iniciar sesión en Firebase (esto registra si es la primera vez)
+      const userCredential = await signInWithCredential(auth, credential);
+      
+      // Asegurarnos de que el usuario existe en nuestra base de datos de Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        displayName: userCredential.user.displayName,
+        email: userCredential.user.email,
+        photoURL: userCredential.user.photoURL,
+        lastUpdated: new Date()
+      }, { merge: true });
+
+      return userCredential.user;
+    } catch (error: any) {
+      console.error(error);
+      throw error.message || "Error al iniciar sesión con Google";
+    }
+  },
+
   // Cerrar sesión
   logout: async () => {
     try {
       await signOut(auth);
+      // Intentar cerrar sesión de Google también para limpiar el estado
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        // Puede fallar si no estaba logueado con Google, ignorar
+      }
     } catch (error: any) {
       throw error.message;
     }

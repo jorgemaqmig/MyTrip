@@ -9,14 +9,14 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  SafeAreaView
+  SafeAreaView,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-
 import { authService } from '../services/authService';
-import { Alert, ActivityIndicator } from 'react-native';
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
@@ -34,10 +34,21 @@ const LoginScreen = () => {
     setLoading(true);
     try {
       await authService.login(email, password);
-      // navigation.navigate('Start'); // El AuthContext se encargará de esto si queremos, pero por ahora lo dejamos así o navegamos manual
       navigation.navigate('Start');
     } catch (error: any) {
       Alert.alert('Error de acceso', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      await authService.loginWithGoogle();
+      navigation.navigate('Start');
+    } catch (error: any) {
+      Alert.alert('Error con Google', error);
     } finally {
       setLoading(false);
     }
@@ -126,6 +137,21 @@ const LoginScreen = () => {
                     <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
                   )}
                 </LinearGradient>
+              </TouchableOpacity>
+
+              <View style={styles.dividerContainer}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>O</Text>
+                <View style={styles.divider} />
+              </View>
+
+              <TouchableOpacity 
+                style={styles.googleButton}
+                onPress={handleGoogleLogin}
+                disabled={loading}
+              >
+                <Ionicons name="logo-google" size={20} color="#EA4335" />
+                <Text style={styles.googleButtonText}>Continuar con Google</Text>
               </TouchableOpacity>
             </View>
 
@@ -243,6 +269,43 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E5EA',
+  },
+  dividerText: {
+    color: '#8E8E93',
+    paddingHorizontal: 15,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    height: 55,
+    borderRadius: 12,
+    gap: 10,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3A3A3C',
   },
   footer: {
     flexDirection: 'row',
