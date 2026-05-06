@@ -57,112 +57,114 @@ const SecurityScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Seguridad</Text>
-        <View style={{ width: 40 }} />
-      </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {isGoogleUser ? (
-          <View style={styles.googleUserContainer}>
-            <LinearGradient
-              colors={['#4285F410', '#4285F405']}
-              style={styles.googleCard}
-            >
-              <View style={styles.googleHeader}>
-                <Ionicons name="logo-google" size={40} color="#4285F4" />
-                <View style={styles.badge}>
-                  <Ionicons name="shield-checkmark" size={14} color="#fff" />
-                  <Text style={styles.badgeText}>Vinculada</Text>
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>Seguridad</Text>
+          <Text style={styles.subtitle}>Protege tu cuenta y tus datos</Text>
+        </View>
+
+        <View style={styles.content}>
+          {isGoogleUser ? (
+            <View style={styles.googleUserContainer}>
+              <LinearGradient
+                colors={['#4285F410', '#4285F405']}
+                style={styles.googleCard}
+              >
+                <View style={styles.googleHeader}>
+                  <Ionicons name="logo-google" size={40} color="#4285F4" />
+                  <View style={styles.badge}>
+                    <Ionicons name="shield-checkmark" size={14} color="#fff" />
+                    <Text style={styles.badgeText}>Vinculada</Text>
+                  </View>
+                </View>
+                
+                <Text style={styles.googleTitle}>Cuenta Protegida</Text>
+                <Text style={styles.googleSubtitle}>
+                  Tu sesión está gestionada por Google. Tu seguridad y contraseña dependen de tu configuración de Google Account.
+                </Text>
+                
+                <TouchableOpacity 
+                  style={styles.externalButton}
+                  onPress={() => Alert.alert('Información', 'Para gestionar tu contraseña, visita la configuración de tu cuenta de Google.')}
+                >
+                  <Text style={styles.externalButtonText}>Gestionar en Google</Text>
+                  <Ionicons name="open-outline" size={18} color="#4285F4" />
+                </TouchableOpacity>
+              </LinearGradient>
+
+              <View style={styles.tipBox}>
+                <Ionicons name="bulb-outline" size={20} color="#FF9500" />
+                <Text style={styles.tipText}>
+                  Al usar Google, disfrutas de autenticación en dos pasos y mayor protección sin necesidad de recordar otra contraseña.
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <View>
+              <View style={styles.infoBox}>
+                <Ionicons name="shield-checkmark-outline" size={24} color="#34C759" />
+                <Text style={styles.infoText}>
+                  Usa una contraseña segura de al menos 6 caracteres. Te recomendamos combinar letras y números.
+                </Text>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Nueva Contraseña</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    placeholder="••••••••"
+                    placeholderTextColor="#8E8E93"
+                  />
+                  <TouchableOpacity 
+                    style={styles.eyeIcon} 
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#8E8E93" />
+                  </TouchableOpacity>
                 </View>
               </View>
-              
-              <Text style={styles.googleTitle}>Cuenta Protegida</Text>
-              <Text style={styles.googleSubtitle}>
-                Tu sesión está gestionada por Google. Tu seguridad y contraseña dependen de tu configuración de Google Account.
-              </Text>
-              
+
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Confirmar Contraseña</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showPassword}
+                    placeholder="••••••••"
+                    placeholderTextColor="#8E8E93"
+                  />
+                </View>
+              </View>
+
               <TouchableOpacity 
-                style={styles.externalButton}
-                onPress={() => Alert.alert('Información', 'Para gestionar tu contraseña, visita la configuración de tu cuenta de Google.')}
+                style={styles.saveButton} 
+                onPress={handleSave}
+                disabled={loading || !password || !confirmPassword}
               >
-                <Text style={styles.externalButtonText}>Gestionar en Google</Text>
-                <Ionicons name="open-outline" size={18} color="#4285F4" />
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <View style={styles.tipBox}>
-              <Ionicons name="bulb-outline" size={20} color="#FF9500" />
-              <Text style={styles.tipText}>
-                Al usar Google, disfrutas de autenticación en dos pasos y mayor protección sin necesidad de recordar otra contraseña.
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <View>
-            <View style={styles.infoBox}>
-              <Ionicons name="shield-checkmark-outline" size={24} color="#34C759" />
-              <Text style={styles.infoText}>
-                Usa una contraseña segura de al menos 6 caracteres. Te recomendamos combinar letras y números.
-              </Text>
-            </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Nueva Contraseña</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor="#8E8E93"
-                />
-                <TouchableOpacity 
-                  style={styles.eyeIcon} 
-                  onPress={() => setShowPassword(!showPassword)}
+                <LinearGradient
+                  colors={(loading || !password || !confirmPassword) ? ['#E5E5EA', '#D1D1D6'] : ['#5856D6', '#8E8DFF']}
+                  style={styles.gradientButton}
                 >
-                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#8E8E93" />
-                </TouchableOpacity>
-              </View>
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Confirmar Contraseña</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={!showPassword}
-                  placeholder="••••••••"
-                  placeholderTextColor="#8E8E93"
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity 
-              style={styles.saveButton} 
-              onPress={handleSave}
-              disabled={loading || !password || !confirmPassword}
-            >
-              <LinearGradient
-                colors={(loading || !password || !confirmPassword) ? ['#E5E5EA', '#D1D1D6'] : ['#5856D6', '#8E8DFF']}
-                style={styles.gradientButton}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        )}
-
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -170,18 +172,27 @@ const SecurityScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
+  scrollContent: { padding: 24 },
+  backButton: {
+    marginBottom: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E' },
-  content: { padding: 24 },
+  headerSection: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  content: { flex: 1 },
   
   // Google User Styles
   googleUserContainer: { alignItems: 'center' },
@@ -249,19 +260,6 @@ const styles = StyleSheet.create({
   saveButton: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
   gradientButton: { paddingVertical: 16, alignItems: 'center' },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-
-  // Extra Section
-  extraSection: { marginTop: 40 },
-  sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#8E8E93', textTransform: 'uppercase', marginBottom: 16, marginLeft: 8 },
-  secondaryOption: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    paddingVertical: 16, 
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
-  },
-  secondaryOptionText: { flex: 1, fontSize: 16, color: '#1C1C1E', marginLeft: 12 },
 });
 
 export default SecurityScreen;

@@ -6,7 +6,8 @@ import {
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -51,70 +52,82 @@ const EditEmailScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Correo Electrónico</Text>
-        <View style={{ width: 40 }} />
-      </View>
 
-      <View style={styles.content}>
-        <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={24} color="#007AFF" />
-          <Text style={styles.infoText}>
-            Tu correo electrónico se utiliza para iniciar sesión y enviarte notificaciones sobre tus viajes.
-          </Text>
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>Correo Electrónico</Text>
+          <Text style={styles.subtitle}>Gestiona tu dirección de contacto</Text>
         </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Nuevo Correo Electrónico</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholder="ejemplo@correo.com"
-            placeholderTextColor="#8E8E93"
-          />
-        </View>
+        <View style={styles.content}>
+          <View style={styles.infoBox}>
+            <Ionicons name="information-circle-outline" size={24} color="#007AFF" />
+            <Text style={styles.infoText}>
+              Tu correo electrónico se utiliza para iniciar sesión y enviarte notificaciones sobre tus viajes.
+            </Text>
+          </View>
 
-        <TouchableOpacity 
-          style={styles.saveButton} 
-          onPress={handleSave}
-          disabled={loading}
-        >
-          <LinearGradient
-            colors={loading ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
-            style={styles.gradientButton}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Nuevo Correo Electrónico</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="ejemplo@correo.com"
+              placeholderTextColor="#8E8E93"
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={styles.saveButton} 
+            onPress={handleSave}
+            disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>Actualizar Correo</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+            <LinearGradient
+              colors={loading ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+              style={styles.gradientButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>Actualizar Correo</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
+  scrollContent: { padding: 24 },
+  backButton: {
+    marginBottom: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E' },
-  content: { padding: 24 },
+  headerSection: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  content: { flex: 1 },
   infoBox: {
     flexDirection: 'row',
     backgroundColor: '#F0F8FF',

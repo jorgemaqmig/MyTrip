@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   ActivityIndicator,
   Alert,
-  Image
+  Image,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -89,7 +90,6 @@ const EditProfileScreen = () => {
     try {
       let photoURL = user?.photoURL;
       
-      // Si seleccionó una imagen nueva (que ahora es el string base64)
       if (imageUri && imageUri !== user?.photoURL) {
         photoURL = imageUri;
       }
@@ -111,78 +111,90 @@ const EditProfileScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar Perfil</Text>
-        <View style={{ width: 40 }} />
-      </View>
 
-      <View style={styles.content}>
-        <View style={styles.avatarSection}>
-          <TouchableOpacity onPress={showImageOptions} style={styles.avatarContainer}>
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.avatarImage} />
-            ) : (
-              <LinearGradient colors={['#007AFF', '#00C6FF']} style={styles.avatarGradient}>
-                <Ionicons name="person" size={50} color="#fff" />
-              </LinearGradient>
-            )}
-            <View style={styles.editBadge}>
-              <Ionicons name="camera" size={16} color="#fff" />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.avatarHint}>Toca para cambiar la foto</Text>
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>Editar Perfil</Text>
+          <Text style={styles.subtitle}>Actualiza tu información pública</Text>
         </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Nombre</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Tu nombre completo"
-            placeholderTextColor="#8E8E93"
-          />
-        </View>
+        <View style={styles.content}>
+          <View style={styles.avatarSection}>
+            <TouchableOpacity onPress={showImageOptions} style={styles.avatarContainer}>
+              {imageUri ? (
+                <Image source={{ uri: imageUri }} style={styles.avatarImage} />
+              ) : (
+                <LinearGradient colors={['#007AFF', '#00C6FF']} style={styles.avatarGradient}>
+                  <Ionicons name="person" size={50} color="#fff" />
+                </LinearGradient>
+              )}
+              <View style={styles.editBadge}>
+                <Ionicons name="camera" size={16} color="#fff" />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.avatarHint}>Toca para cambiar la foto</Text>
+          </View>
 
-        <TouchableOpacity 
-          style={styles.saveButton} 
-          onPress={handleSave}
-          disabled={loading}
-        >
-          <LinearGradient
-            colors={loading ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
-            style={styles.gradientButton}
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Nombre</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Tu nombre completo"
+              placeholderTextColor="#8E8E93"
+            />
+          </View>
+
+          <TouchableOpacity 
+            style={styles.saveButton} 
+            onPress={handleSave}
+            disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>Guardar Cambios</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+            <LinearGradient
+              colors={loading ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+              style={styles.gradientButton}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
+  scrollContent: { padding: 24 },
+  backButton: {
+    marginBottom: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E' },
-  content: { padding: 24 },
-  avatarSection: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
+  headerSection: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  content: { flex: 1 },
+  avatarSection: { alignItems: 'center', marginBottom: 40 },
   avatarContainer: { position: 'relative' },
   avatarImage: { width: 120, height: 120, borderRadius: 60 },
   avatarGradient: { width: 120, height: 120, borderRadius: 60, justifyContent: 'center', alignItems: 'center' },
@@ -190,7 +202,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#007AFF',
     width: 36,
     height: 36,
     borderRadius: 18,
