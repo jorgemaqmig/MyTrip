@@ -49,9 +49,7 @@ const MainTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: any;
 
-          if (route.name === 'Inicio') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Mapa') {
+          if (route.name === 'Mapa') {
             iconName = focused ? 'map' : 'map-outline';
           } else if (route.name === 'Itinerario') {
             iconName = focused ? 'calendar' : 'calendar-outline';
@@ -85,7 +83,6 @@ const MainTabs = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen name="Inicio" component={StartScreen} />
       <Tab.Screen name="Mapa" component={MapScreen} />
       <Tab.Screen name="Itinerario" component={ItineraryScreen} />
       <Tab.Screen name="Más" component={MoreStackNavigation} />
