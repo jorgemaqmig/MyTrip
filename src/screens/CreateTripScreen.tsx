@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -7,10 +7,10 @@ import {
   TouchableOpacity, 
   KeyboardAvoidingView, 
   Platform,
-  ScrollView,
   ActivityIndicator,
   Modal,
-  LogBox
+  LogBox,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,7 +24,6 @@ import { tripService } from '../services/tripService';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-
 
 LocaleConfig.locales['es'] = {
   monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
@@ -41,6 +40,7 @@ const CreateTripScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
   const { setActiveTrip } = useTrip();
+  const placesRef = useRef<any>(null);
   
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
@@ -49,7 +49,6 @@ const CreateTripScreen = () => {
   const [creating, setCreating] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [numPeople, setNumPeople] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectingStartDate, setSelectingStartDate] = useState(true);
 
@@ -69,7 +68,6 @@ const CreateTripScreen = () => {
         longitude,
         startDate,
         endDate,
-        numPeople,
         status: 'Planeado' as const,
       };
       const tripId = await tripService.createTrip(tripData);
@@ -105,136 +103,171 @@ const CreateTripScreen = () => {
 
   const isFormValid = name && location && startDate && endDate;
 
+  const headerComponent = (
+    <View style={styles.scrollContent}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+      </TouchableOpacity>
+
+      <View style={styles.header}>
+        <Text style={styles.title}>Nuevo Viaje</Text>
+        <Text style={styles.subtitle}>Configura tu próxima aventura en segundos</Text>
+      </View>
+
+      <View style={styles.form}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Nombre del Viaje</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ej: Graduación 2026"
+            placeholderTextColor="#8E8E93"
+            value={name}
+            onChangeText={setName}
+          />
+        </View>
+
+        <View style={[styles.inputGroup, { zIndex: 10 }]}>
+          <Text style={styles.label}>Lugar</Text>
+          <GooglePlacesAutocomplete
+            ref={placesRef}
+            placeholder="¿A dónde vamos?"
+            minLength={2}
+            fetchDetails={true}
+            onPress={(data, details = null) => {
+              setLocation(data.description);
+              if (details?.geometry?.location) {
+                setLatitude(details.geometry.location.lat);
+                setLongitude(details.geometry.location.lng);
+              }
+            }}
+            query={{
+              key: GOOGLE_MAPS_API_KEY,
+              language: 'es',
+            }}
+            debounce={400}
+            enablePoweredByContainer={false}
+            styles={{
+              textInputContainer: {
+                backgroundColor: '#F2F2F7',
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingRight: 10,
+              },
+              textInput: {
+                height: 50,
+                backgroundColor: 'transparent',
+                color: '#1C1C1E',
+                fontSize: 16,
+                paddingHorizontal: 15,
+                marginBottom: 0,
+              },
+              listView: {
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                marginTop: 5,
+                elevation: 3,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                zIndex: 1000,
+              },
+              row: {
+                padding: 13,
+                height: 50,
+                flexDirection: 'row',
+              },
+              separator: {
+                height: 1,
+                backgroundColor: '#F2F2F7',
+              },
+            }}
+            textInputProps={{
+              placeholderTextColor: '#8E8E93',
+              onChangeText: (text) => {
+                if (text === '') {
+                  setLocation('');
+                  setLatitude(undefined);
+                  setLongitude(undefined);
+                }
+              }
+            }}
+            renderRightButton={() => (
+              location ? (
+                <TouchableOpacity onPress={() => {
+                  placesRef.current?.setAddressText('');
+                  setLocation('');
+                  setLatitude(undefined);
+                  setLongitude(undefined);
+                }}>
+                  <Ionicons name="close-circle" size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              ) : null
+            )}
+          />
+        </View>
+
+        <View style={styles.dateContainer}>
+          <TouchableOpacity style={styles.datePicker} onPress={() => { setShowCalendar(true); setSelectingStartDate(true); }}>
+            <Text style={styles.label}>Fecha Inicio</Text>
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={18} color="#007AFF" />
+              <Text style={[styles.dateValue, !startDate ? { color: '#8E8E93' } : null]}>
+                {startDate || 'Día inicial'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.datePicker} onPress={() => { setShowCalendar(true); setSelectingStartDate(false); }}>
+            <Text style={styles.label}>Fecha Fin</Text>
+            <View style={styles.dateRow}>
+              <Ionicons name="calendar-outline" size={18} color="#007AFF" />
+              <Text style={[styles.dateValue, !endDate ? { color: '#8E8E93' } : null]}>
+                {endDate || 'Día final'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={styles.createButton} 
+          onPress={handleCreateTrip}
+          disabled={!isFormValid || creating}
+        >
+          <LinearGradient
+            colors={(!isFormValid || creating) ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+            style={styles.gradientButton}
+          >
+            {creating ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.createButtonText}>Crear Viaje</Text>
+                <Ionicons name="airplane-outline" size={20} color="#fff" />
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.flexOne}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
-          </TouchableOpacity>
-
-          <View style={styles.header}>
-            <Text style={styles.title}>Nuevo Viaje</Text>
-            <Text style={styles.subtitle}>Configura tu próxima aventura en segundos</Text>
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Nombre del Viaje</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Ej: Graduación 2026"
-                value={name}
-                onChangeText={setName}
-              />
-            </View>
-
-            <View style={[styles.inputGroup, { zIndex: 10 }]}>
-              <Text style={styles.label}>Lugar</Text>
-              <GooglePlacesAutocomplete
-                placeholder="¿A dónde vamos?"
-                onPress={(data, details = null) => {
-                  setLocation(data.description);
-                  if (details?.geometry?.location) {
-                    setLatitude(details.geometry.location.lat);
-                    setLongitude(details.geometry.location.lng);
-                  }
-                }}
-                query={{
-                  key: GOOGLE_MAPS_API_KEY,
-                  language: 'es',
-                }}
-                styles={{
-                  textInputContainer: {
-                    backgroundColor: '#F2F2F7',
-                    borderRadius: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  },
-                  textInput: {
-                    height: 50,
-                    backgroundColor: 'transparent',
-                    color: '#1C1C1E',
-                    fontSize: 16,
-                    paddingHorizontal: 15,
-                    marginBottom: 0,
-                  },
-                  predefinedPlacesDescription: {
-                    color: '#1faadb',
-                  },
-                }}
-                enablePoweredByContainer={false}
-                fetchDetails={true}
-                textInputProps={{
-                  placeholderTextColor: '#8E8E93',
-                }}
-              />
-            </View>
-
-            <View style={styles.dateContainer}>
-              <TouchableOpacity style={styles.datePicker} onPress={() => { setShowCalendar(true); setSelectingStartDate(true); }}>
-                <Text style={styles.label}>Fecha Inicio</Text>
-                <View style={styles.dateRow}>
-                  <Ionicons name="calendar-outline" size={18} color="#007AFF" />
-                  <Text style={[styles.dateValue, !startDate ? { color: '#8E8E93' } : null]}>
-                    {startDate || 'Día inicial'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.datePicker} onPress={() => { setShowCalendar(true); setSelectingStartDate(false); }}>
-                <Text style={styles.label}>Fecha Fin</Text>
-                <View style={styles.dateRow}>
-                  <Ionicons name="calendar-outline" size={18} color="#007AFF" />
-                  <Text style={[styles.dateValue, !endDate ? { color: '#8E8E93' } : null]}>
-                    {endDate || 'Día final'}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>¿Cuántas personas van?</Text>
-              <View style={styles.peopleSelector}>
-                <TouchableOpacity style={styles.counterButton} onPress={() => setNumPeople(Math.max(1, numPeople - 1))}>
-                  <Ionicons name="remove" size={24} color="#007AFF" />
-                </TouchableOpacity>
-                <View style={styles.peopleCount}>
-                  <Text style={styles.peopleCountText}>{numPeople}</Text>
-                  <Text style={styles.peopleLabel}>{numPeople === 1 ? 'Persona' : 'Personas'}</Text>
-                </View>
-                <TouchableOpacity style={styles.counterButton} onPress={() => setNumPeople(Math.min(20, numPeople + 1))}>
-                  <Ionicons name="add" size={24} color="#007AFF" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.footer}>
-            <TouchableOpacity 
-              style={styles.createButton} 
-              onPress={handleCreateTrip}
-              disabled={!isFormValid || creating}
-            >
-              <LinearGradient
-                colors={(!isFormValid || creating) ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
-                style={styles.gradientButton}
-              >
-                {creating ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Text style={styles.createButtonText}>Crear Viaje</Text>
-                    <Ionicons name="airplane-outline" size={20} color="#fff" />
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+        <FlatList
+          data={[]}
+          renderItem={() => null}
+          ListHeaderComponent={headerComponent}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1 }}
+        />
       </KeyboardAvoidingView>
 
       <Modal visible={showCalendar} transparent animationType="slide">
@@ -280,11 +313,6 @@ const styles = StyleSheet.create({
   datePicker: { flex: 1, backgroundColor: '#F2F2F7', padding: 16, borderRadius: 12, gap: 8 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dateValue: { fontSize: 15, color: '#1C1C1E', fontWeight: '500' },
-  peopleSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F2F2F7', padding: 12, borderRadius: 16 },
-  counterButton: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 2 },
-  peopleCount: { alignItems: 'center', flexDirection: 'row', gap: 8 },
-  peopleCountText: { fontSize: 24, fontWeight: 'bold', color: '#1C1C1E' },
-  peopleLabel: { fontSize: 16, color: '#8E8E93', fontWeight: '500' },
   footer: { marginTop: 48, marginBottom: 40 },
   createButton: { borderRadius: 16, overflow: 'hidden' },
   gradientButton: { paddingVertical: 18, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },

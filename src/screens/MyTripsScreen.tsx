@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   TouchableOpacity, 
   FlatList, 
-  SafeAreaView,
-  Dimensions,
   ActivityIndicator
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
 import { tripService, Trip } from '../services/tripService';
-import { useCallback } from 'react';
-
-const { width } = Dimensions.get('window');
 
 const MyTripsScreen = () => {
   const navigation = useNavigation<any>();
@@ -65,7 +61,7 @@ const MyTripsScreen = () => {
     const color = getTripColor(index);
     const dateStr = item.startDate && item.endDate 
       ? `${item.startDate.slice(5)} - ${item.endDate.slice(5)}` 
-      : (item.startDate || item.dates);
+      : (item.startDate || 'Sin fechas');
       
     return (
       <TouchableOpacity 
@@ -89,7 +85,7 @@ const MyTripsScreen = () => {
         
         <View style={styles.cardBody}>
           <View style={styles.mainInfo}>
-            <Text style={styles.tripTitle}>{item.title || item.name}</Text>
+            <Text style={styles.tripTitle}>{item.name}</Text>
             <View style={styles.locationRow}>
               <Ionicons name="location" size={14} color="#8E8E93" />
               <Text style={styles.tripLocation}>{item.location}</Text>
@@ -103,10 +99,6 @@ const MyTripsScreen = () => {
               <Ionicons name="calendar-outline" size={16} color="#007AFF" />
               <Text style={styles.footerLabel}>{dateStr}</Text>
             </View>
-            <View style={styles.footerItem}>
-              <Ionicons name="people-outline" size={16} color="#007AFF" />
-              <Text style={styles.footerLabel}>{item.numPeople || item.participants} per.</Text>
-            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -115,62 +107,61 @@ const MyTripsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Cabecera Personalizada */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mis Viajes</Text>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('CreateTrip')}>
-          <Ionicons name="add" size={28} color="#007AFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Selector de Pestañas */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
-          onPress={() => setActiveTab('upcoming')}
-        >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>Próximos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'past' && styles.activeTab]}
-          onPress={() => setActiveTab('past')}
-        >
-          <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>Anteriores</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Listado de Viajes */}
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      ) : (
-        <FlatList
-          data={activeTab === 'upcoming' ? upcomingTrips : pastTrips}
-          renderItem={renderTripCard}
-          keyExtractor={(item) => (item.id as string) || Math.random().toString()}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="trail-sign-outline" size={80} color="#D1D1D6" />
-              <Text style={styles.emptyText}>No hay viajes en esta sección</Text>
-              <TouchableOpacity 
-                style={styles.emptyButton}
-                onPress={() => navigation.navigate('CreateTrip')}
-              >
-                <Text style={styles.emptyButtonText}>Crear mi primer viaje</Text>
+      <FlatList
+        data={activeTab === 'upcoming' ? upcomingTrips : pastTrips}
+        renderItem={renderTripCard}
+        keyExtractor={(item) => (item.id as string) || Math.random().toString()}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            <View style={styles.topActions}>
+              <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('CreateTrip')}>
+                <Ionicons name="add-circle" size={32} color="#007AFF" />
               </TouchableOpacity>
             </View>
-          }
-        />
-      )}
+
+            <View style={styles.header}>
+              <Text style={styles.title}>Mis Viajes</Text>
+              <Text style={styles.subtitle}>Gestiona tus aventuras planeadas y pasadas</Text>
+            </View>
+
+            <View style={styles.tabContainer}>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
+                onPress={() => setActiveTab('upcoming')}
+              >
+                <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>Próximos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'past' && styles.activeTab]}
+                onPress={() => setActiveTab('past')}
+              >
+                <Text style={[styles.tabText, activeTab === 'past' && styles.activeTabText]}>Anteriores</Text>
+              </TouchableOpacity>
+            </View>
+
+            {loading && (
+              <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 20 }} />
+            )}
+          </View>
+        }
+        ListEmptyComponent={!loading ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="trail-sign-outline" size={80} color="#D1D1D6" />
+            <Text style={styles.emptyText}>No hay viajes en esta sección</Text>
+            <TouchableOpacity 
+              style={styles.emptyButton}
+              onPress={() => navigation.navigate('CreateTrip')}
+            >
+              <Text style={styles.emptyButtonText}>Crear mi primer viaje</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      />
     </SafeAreaView>
   );
 };
@@ -178,37 +169,44 @@ const MyTripsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     backgroundColor: '#fff',
+  },
+  listContent: {
+    padding: 24,
+  },
+  topActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   backButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
   },
   addButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
-  tabBar: {
+  header: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
+    marginBottom: 24,
     borderBottomWidth: 1,
     borderBottomColor: '#F2F2F7',
   },
@@ -229,10 +227,6 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: '#007AFF',
   },
-  listContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
   tripCard: {
     backgroundColor: '#fff',
     borderRadius: 24,
@@ -243,6 +237,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F2F2F7',
   },
   cardHeader: {
     height: 100,
@@ -305,7 +301,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 100,
+    marginTop: 60,
   },
   emptyText: {
     fontSize: 16,

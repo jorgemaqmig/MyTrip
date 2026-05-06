@@ -4,13 +4,11 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  ScrollView, 
-  SafeAreaView,
   TextInput,
-  Image,
   Dimensions,
   FlatList
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -74,57 +72,51 @@ const SocialScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header con Buscador */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
-        </TouchableOpacity>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#8E8E93" />
-          <TextInput 
-            placeholder="Buscar viajes o gente..." 
-            style={styles.searchInput}
-            placeholderTextColor="#8E8E93"
-          />
-        </View>
-      </View>
+      <FlatList
+        data={activeTab === 'explorar' ? exploreTrips : friends}
+        renderItem={activeTab === 'explorar' ? renderExploreCard : renderFriendItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+            </TouchableOpacity>
 
-      {/* Selector de Pestañas */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'explorar' ? styles.activeTab : null]} 
-          onPress={() => setActiveTab('explorar')}
-        >
-          <Text style={[styles.tabText, activeTab === 'explorar' ? styles.activeTabText : null]}>Explorar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'amigos' ? styles.activeTab : null]} 
-          onPress={() => setActiveTab('amigos')}
-        >
-          <Text style={[styles.tabText, activeTab === 'amigos' ? styles.activeTabText : null]}>Amigos</Text>
-        </TouchableOpacity>
-      </View>
+            <View style={styles.header}>
+              <Text style={styles.title}>Social</Text>
+              <Text style={styles.subtitle}>Conecta con otros viajeros y explora rutas</Text>
+            </View>
 
-      {/* Contenido Dinámico */}
-      <View style={{ flex: 1 }}>
-        {activeTab === 'explorar' ? (
-          <FlatList
-            data={exploreTrips}
-            renderItem={renderExploreCard}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          <FlatList
-            data={friends}
-            renderItem={renderFriendItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
+            <View style={styles.searchContainer}>
+              <View style={styles.searchBar}>
+                <Ionicons name="search" size={18} color="#8E8E93" />
+                <TextInput 
+                  placeholder="Buscar viajes o gente..." 
+                  style={styles.searchInput}
+                  placeholderTextColor="#8E8E93"
+                />
+              </View>
+            </View>
+
+            <View style={styles.tabContainer}>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'explorar' ? styles.activeTab : null]} 
+                onPress={() => setActiveTab('explorar')}
+              >
+                <Text style={[styles.tabText, activeTab === 'explorar' ? styles.activeTabText : null]}>Explorar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'amigos' ? styles.activeTab : null]} 
+                onPress={() => setActiveTab('amigos')}
+              >
+                <Text style={[styles.tabText, activeTab === 'amigos' ? styles.activeTabText : null]}>Amigos</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        }
+      />
     </SafeAreaView>
   );
 };
@@ -134,21 +126,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+  listContent: {
+    padding: 24,
   },
   backButton: {
-    padding: 4,
+    marginBottom: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  searchContainer: {
+    marginBottom: 24,
   },
   searchBar: {
-    flex: 1,
-    height: 44,
+    height: 50,
     backgroundColor: '#F2F2F7',
-    borderRadius: 22,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -161,13 +167,13 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    marginBottom: 24,
     borderBottomWidth: 1,
     borderBottomColor: '#F2F2F7',
   },
   tab: {
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     marginRight: 8,
   },
   activeTab: {
@@ -181,9 +187,6 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: '#007AFF',
-  },
-  listContent: {
-    padding: 16,
   },
   exploreCard: {
     backgroundColor: '#fff',
@@ -239,7 +242,7 @@ const styles = StyleSheet.create({
   friendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F2F2F7',
   },
