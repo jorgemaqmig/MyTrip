@@ -2,6 +2,7 @@
   "expo": {
     "name": "MyTrip",
     "slug": "mytrip",
+    "scheme": "mytrip",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,14 +30,27 @@
         "googleMaps": {
           "apiKey": "AIzaSyD7XCSzbj4nTCCk42RLOD5IWj6Oucxxiok"
         }
-      }
+      },
+      "package": "com.anonymous.mytrip",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "@react-native-community/datetimepicker",
-      "@react-native-google-signin/google-signin"
-    ]
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.638295579061-2hjblsi2kh06vvvkvk0fc9d6vjc0svfp",
+          "androidFile": "./google-services.json"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3fa8711a-f6af-4928-8656-e03868a45562"
+      }
+    }
   }
 }
