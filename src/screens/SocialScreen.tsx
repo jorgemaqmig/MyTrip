@@ -20,10 +20,10 @@ const SocialScreen = () => {
   const [activeTab, setActiveTab] = useState('explorar'); // 'amigos' o 'explorar'
 
   const exploreTrips = [
-    { id: '1', title: 'Aventura en los Alpes', location: 'Suiza', duration: '7 días', color: '#5856D6', icon: 'snow' },
-    { id: '2', title: 'Templos de Kyoto', location: 'Japón', duration: '12 días', color: '#FF3B30', icon: 'bonfire' },
-    { id: '3', title: 'Ruta del Café', location: 'Colombia', duration: '5 días', color: '#FF9500', icon: 'sunny' },
-    { id: '4', title: 'Aurora Boreal', location: 'Islandia', duration: '6 días', color: '#32ADE6', icon: 'flash' },
+    { id: '1', title: 'Aventura en los Alpes', location: 'Suiza', duration: '7 días', color: '#5856D6', icon: 'snow' as any },
+    { id: '2', title: 'Templos de Kyoto', location: 'Japón', duration: '12 días', color: '#FF3B30', icon: 'bonfire' as any },
+    { id: '3', title: 'Ruta del Café', location: 'Colombia', duration: '5 días', color: '#FF9500', icon: 'sunny' as any },
+    { id: '4', title: 'Aurora Boreal', location: 'Islandia', duration: '6 días', color: '#32ADE6', icon: 'flash' as any },
   ];
 
   const friends = [
@@ -73,9 +73,9 @@ const SocialScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
-        data={activeTab === 'explorar' ? exploreTrips : friends}
+        data={(activeTab === 'explorar' ? exploreTrips : friends) as any[]}
         renderItem={activeTab === 'explorar' ? renderExploreCard : renderFriendItem}
-        keyExtractor={item => item.id}
+        keyExtractor={(item: any) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={

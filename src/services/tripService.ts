@@ -21,7 +21,7 @@ export interface Trip {
   longitude?: number;
   startDate: string;
   endDate: string;
-  numPeople: number;
+  numPeople?: number; // Ahora es opcional con el "?"
   status: 'Próximamente' | 'Planeado' | 'En curso' | 'Finalizado';
   createdAt: any;
 }
