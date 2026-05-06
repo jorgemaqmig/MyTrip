@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 
 import MapScreen from '../screens/MapScreen';
 import ItineraryScreen from '../screens/ItineraryScreen';
@@ -20,6 +21,9 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import EditEmailScreen from '../screens/EditEmailScreen';
 import SecurityScreen from '../screens/SecurityScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import AppearanceScreen from '../screens/AppearanceScreen';
+
+import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,6 +41,8 @@ const MoreStackNavigation = () => {
 };
 
 const MainTabs = () => {
+  const { colors, isDark } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -53,8 +59,22 @@ const MainTabs = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.separator,
+          borderTopWidth: 1,
+          height: Platform.OS === 'ios' ? 88 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+          paddingTop: 10,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        },
         headerShown: false,
       })}
     >
@@ -84,6 +104,7 @@ const AppNavigator = () => {
       <Stack.Screen name="EditEmail" component={EditEmailScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="Appearance" component={AppearanceScreen} />
     </Stack.Navigator>
   );
 };

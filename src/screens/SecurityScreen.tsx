@@ -15,17 +15,19 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { authService } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const SecurityScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Detectar si el usuario es de Google
   const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com');
 
   const handleSave = async () => {
@@ -56,23 +58,24 @@ const SecurityScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerSection}>
-          <Text style={styles.title}>Seguridad</Text>
-          <Text style={styles.subtitle}>Protege tu cuenta y tus datos</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Seguridad</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Protege tu cuenta y tus datos</Text>
         </View>
 
         <View style={styles.content}>
           {isGoogleUser ? (
             <View style={styles.googleUserContainer}>
               <LinearGradient
-                colors={['#4285F410', '#4285F405']}
-                style={styles.googleCard}
+                colors={isDark ? ['#1C1C1E', '#1C1C1E'] : ['#4285F410', '#4285F405']}
+                style={[styles.googleCard, { borderColor: isDark ? colors.border : '#4285F420' }]}
               >
                 <View style={styles.googleHeader}>
                   <Ionicons name="logo-google" size={40} color="#4285F4" />
@@ -82,8 +85,8 @@ const SecurityScreen = () => {
                   </View>
                 </View>
                 
-                <Text style={styles.googleTitle}>Cuenta Protegida</Text>
-                <Text style={styles.googleSubtitle}>
+                <Text style={[styles.googleTitle, { color: colors.text }]}>Cuenta Protegida</Text>
+                <Text style={[styles.googleSubtitle, { color: colors.textSecondary }]}>
                   Tu sesión está gestionada por Google. Tu seguridad y contraseña dependen de tu configuración de Google Account.
                 </Text>
                 
@@ -96,52 +99,52 @@ const SecurityScreen = () => {
                 </TouchableOpacity>
               </LinearGradient>
 
-              <View style={styles.tipBox}>
-                <Ionicons name="bulb-outline" size={20} color="#FF9500" />
-                <Text style={styles.tipText}>
+              <View style={[styles.tipBox, { backgroundColor: isDark ? '#1C1C1E' : '#FFF9F2' }]}>
+                <Ionicons name="bulb-outline" size={20} color={isDark ? colors.primary : "#FF9500"} />
+                <Text style={[styles.tipText, { color: isDark ? colors.textSecondary : "#A05E03" }]}>
                   Al usar Google, disfrutas de autenticación en dos pasos y mayor protección sin necesidad de recordar otra contraseña.
                 </Text>
               </View>
             </View>
           ) : (
             <View>
-              <View style={styles.infoBox}>
-                <Ionicons name="shield-checkmark-outline" size={24} color="#34C759" />
-                <Text style={styles.infoText}>
+              <View style={[styles.infoBox, { backgroundColor: isDark ? '#1C1C1E' : '#F0FFF4' }]}>
+                <Ionicons name="shield-checkmark-outline" size={24} color={isDark ? colors.primary : "#34C759"} />
+                <Text style={[styles.infoText, { color: isDark ? colors.textSecondary : "#148734" }]}>
                   Usa una contraseña segura de al menos 6 caracteres. Te recomendamos combinar letras y números.
                 </Text>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Nueva Contraseña</Text>
-                <View style={styles.passwordContainer}>
+                <Text style={[styles.label, { color: colors.text }]}>Nueva Contraseña</Text>
+                <View style={[styles.passwordContainer, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={[styles.passwordInput, { color: colors.text }]}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                     placeholder="••••••••"
-                    placeholderTextColor="#8E8E93"
+                    placeholderTextColor={colors.textSecondary}
                   />
                   <TouchableOpacity 
                     style={styles.eyeIcon} 
                     onPress={() => setShowPassword(!showPassword)}
                   >
-                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#8E8E93" />
+                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Confirmar Contraseña</Text>
-                <View style={styles.passwordContainer}>
+                <Text style={[styles.label, { color: colors.text }]}>Confirmar Contraseña</Text>
+                <View style={[styles.passwordContainer, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={[styles.passwordInput, { color: colors.text }]}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showPassword}
                     placeholder="••••••••"
-                    placeholderTextColor="#8E8E93"
+                    placeholderTextColor={colors.textSecondary}
                   />
                 </View>
               </View>
@@ -152,7 +155,7 @@ const SecurityScreen = () => {
                 disabled={loading || !password || !confirmPassword}
               >
                 <LinearGradient
-                  colors={(loading || !password || !confirmPassword) ? ['#E5E5EA', '#D1D1D6'] : ['#5856D6', '#8E8DFF']}
+                  colors={(loading || !password || !confirmPassword) ? [colors.border, colors.border] : ['#5856D6', '#8E8DFF']}
                   style={styles.gradientButton}
                 >
                   {loading ? (
@@ -171,7 +174,7 @@ const SecurityScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   scrollContent: { padding: 24 },
   backButton: {
     marginBottom: 20,
@@ -185,12 +188,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1C1C1E',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#8E8E93',
   },
   content: { flex: 1 },
   
@@ -201,7 +202,6 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#4285F420',
     alignItems: 'center',
   },
   googleHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 },
@@ -216,37 +216,34 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold', marginLeft: 2 },
-  googleTitle: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 12 },
-  googleSubtitle: { fontSize: 15, color: '#3A3A3C', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
+  googleTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 12 },
+  googleSubtitle: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 20 },
   externalButton: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   externalButtonText: { color: '#4285F4', fontWeight: 'bold', fontSize: 16 },
   tipBox: { 
     flexDirection: 'row', 
-    backgroundColor: '#FFF9F2', 
     padding: 16, 
     borderRadius: 16, 
     marginTop: 24, 
     gap: 12,
     alignItems: 'center'
   },
-  tipText: { flex: 1, fontSize: 13, color: '#A05E03', lineHeight: 18 },
+  tipText: { flex: 1, fontSize: 13, lineHeight: 18 },
 
   // Form Styles
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#F0FFF4',
     padding: 16,
     borderRadius: 12,
     marginBottom: 32,
     alignItems: 'center',
   },
-  infoText: { flex: 1, marginLeft: 12, fontSize: 14, color: '#148734', lineHeight: 20 },
+  infoText: { flex: 1, marginLeft: 12, fontSize: 14, lineHeight: 20 },
   formGroup: { marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F2F7',
     borderRadius: 12,
   },
   passwordInput: {
@@ -254,7 +251,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1C1C1E',
   },
   eyeIcon: { padding: 14 },
   saveButton: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },

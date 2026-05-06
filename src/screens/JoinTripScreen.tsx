@@ -14,13 +14,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const JoinTripScreen = () => {
   const navigation = useNavigation<any>();
+  const { colors, isDark } = useTheme();
   const [code, setCode] = useState('');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.flexOne}
@@ -31,32 +35,32 @@ const JoinTripScreen = () => {
               style={styles.backButton} 
               onPress={() => navigation.goBack()}
             >
-              <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
 
             <View style={styles.header}>
-              <Text style={styles.title}>Unirme a un Viaje</Text>
-              <Text style={styles.subtitle}>Introduce el código que te ha pasado el organizador</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Unirme a un Viaje</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Introduce el código que te ha pasado el organizador</Text>
             </View>
 
             <View style={styles.content}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Código del Viaje</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Código del Viaje</Text>
                 <TextInput
-                  style={styles.codeInput}
+                  style={[styles.codeInput, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
                   placeholder="ABC-123"
-                  placeholderTextColor="#C7C7CC"
+                  placeholderTextColor={colors.textSecondary}
                   autoCapitalize="characters"
                   maxLength={10}
                   value={code}
                   onChangeText={setCode}
                 />
-                <Text style={styles.helperText}>Ejemplo: MAD-7890</Text>
+                <Text style={[styles.helperText, { color: colors.textSecondary }]}>Ejemplo: MAD-7890</Text>
               </View>
 
-              <View style={styles.infoBox}>
-                <Ionicons name="information-circle-outline" size={20} color="#8E8E93" />
-                <Text style={styles.infoText}>
+              <View style={[styles.infoBox, { backgroundColor: isDark ? '#1C1C1E' : '#F8F9FB' }]}>
+                <Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} />
+                <Text style={[styles.infoText, { color: colors.textSecondary }]}>
                   Al unirte, podrás ver el itinerario, mapa y gastos compartidos del viaje.
                 </Text>
               </View>
@@ -69,7 +73,7 @@ const JoinTripScreen = () => {
                 disabled={code.length < 4}
               >
                 <LinearGradient
-                  colors={code.length < 4 ? ['#E5E5EA', '#D1D1D6'] : ['#5856D6', '#8E8DFF']}
+                  colors={code.length < 4 ? [colors.border, colors.border] : ['#5856D6', '#8E8DFF']}
                   style={styles.gradientButton}
                 >
                   <Text style={styles.joinButtonText}>Unirme al Viaje</Text>
@@ -85,20 +89,20 @@ const JoinTripScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   flexOne: { flex: 1 },
   inner: { flex: 1, padding: 24 },
   backButton: { marginBottom: 20, width: 40, height: 40, justifyContent: 'center' },
   header: { marginBottom: 48 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#8E8E93', lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
+  subtitle: { fontSize: 16, lineHeight: 22 },
   content: { flex: 1 },
   inputGroup: { gap: 12, marginBottom: 32 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C', marginLeft: 4 },
-  codeInput: { backgroundColor: '#F2F2F7', padding: 24, borderRadius: 20, fontSize: 32, fontWeight: 'bold', color: '#1C1C1E', textAlign: 'center', letterSpacing: 4 },
-  helperText: { fontSize: 13, color: '#8E8E93', textAlign: 'center' },
-  infoBox: { flexDirection: 'row', backgroundColor: '#F8F9FB', padding: 16, borderRadius: 16, gap: 12, alignItems: 'center' },
-  infoText: { flex: 1, fontSize: 14, color: '#8E8E93', lineHeight: 20 },
+  label: { fontSize: 14, fontWeight: '600', marginLeft: 4 },
+  codeInput: { padding: 24, borderRadius: 20, fontSize: 32, fontWeight: 'bold', textAlign: 'center', letterSpacing: 4 },
+  helperText: { fontSize: 13, textAlign: 'center' },
+  infoBox: { flexDirection: 'row', padding: 16, borderRadius: 16, gap: 12, alignItems: 'center' },
+  infoText: { flex: 1, fontSize: 14, lineHeight: 20 },
   footer: { marginBottom: 20 },
   joinButton: { borderRadius: 20, overflow: 'hidden' },
   gradientButton: { paddingVertical: 18, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },

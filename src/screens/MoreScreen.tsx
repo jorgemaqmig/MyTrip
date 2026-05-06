@@ -5,18 +5,20 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView,
-  SafeAreaView
+  Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-
 import { authService } from '../services/authService';
 import { tripService } from '../services/tripService';
 import { useTrip } from '../context/TripContext';
-import { Alert } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const MoreScreen = () => {
   const navigation = useNavigation<any>();
+  const { colors, isDark } = useTheme();
   const { activeTrip, setActiveTrip } = useTrip();
 
   const handleLogout = async () => {
@@ -59,23 +61,27 @@ const MoreScreen = () => {
         <Ionicons name={icon} size={24} color={color} />
       </View>
       <View style={styles.menuContent}>
-        <Text style={styles.menuTitle}>{title}</Text>
-        {subtitle ? <Text style={styles.menuSubtitle}>{subtitle}</Text> : null}
+        <Text style={[styles.menuTitle, { color: colors.text }]}>{title}</Text>
+        {subtitle ? <Text style={[styles.menuSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text> : null}
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+      <Ionicons name="chevron-forward" size={20} color={isDark ? '#48484A' : '#C7C7CC'} />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Más opciones</Text>
-      </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.topSpacer} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.headerSection}>
+          <Text style={[styles.title, { color: colors.text }]}>Más Opciones</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestión detallada de tu viaje actual</Text>
+        </View>
+
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Gestión del Viaje</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Gestión del Viaje</Text>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <MenuItem 
               icon="wallet-outline" 
               title="Gastos" 
@@ -83,7 +89,7 @@ const MoreScreen = () => {
               color="#32ADE6"
               onPress={() => navigation.navigate('Gastos')}
             />
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
             <MenuItem 
               icon="document-lock-outline" 
               title="Caja Fuerte" 
@@ -91,28 +97,28 @@ const MoreScreen = () => {
               color="#5856D6"
               onPress={() => navigation.navigate('Documentos')}
             />
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
             <MenuItem 
               icon="people-outline" 
               title="Invitar Amigos" 
               subtitle="Comparte el código del viaje"
               color="#FF9500"
-              onPress={() => {}}
+              onPress={() => { }}
             />
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Configuración</Text>
-          <View style={styles.card}>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Configuración</Text>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <MenuItem 
               icon="options-outline" 
               title="Ajustes del Viaje" 
               subtitle="Nombre, fechas y participantes"
               color="#8E8E93"
-              onPress={() => {}}
+              onPress={() => { }}
             />
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
             <MenuItem 
               icon="trash-outline" 
               title="Eliminar Viaje" 
@@ -120,21 +126,7 @@ const MoreScreen = () => {
               color="#FF3B30"
               onPress={handleDeleteTrip}
             />
-            <View style={styles.separator} />
-            <MenuItem 
-              icon="exit-outline" 
-              title="Cerrar Sesión" 
-              color="#FF3B30"
-              onPress={handleLogout}
-            />
           </View>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>¿Necesitas ayuda con el viaje?</Text>
-          <TouchableOpacity>
-            <Text style={styles.supportLink}>Contactar soporte</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -142,92 +134,21 @@ const MoreScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FB',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F2F2F7',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1C1C1E',
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#8E8E93',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    marginLeft: 8,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  menuContent: {
-    flex: 1,
-  },
-  menuTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1C1C1E',
-  },
-  menuSubtitle: {
-    fontSize: 13,
-    color: '#8E8E93',
-    marginTop: 2,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#F2F2F7',
-    marginLeft: 76,
-  },
-  footer: {
-    marginTop: 20,
-    alignItems: 'center',
-    paddingBottom: 40,
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#8E8E93',
-  },
-  supportLink: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '600',
-    marginTop: 4,
-  },
+  container: { flex: 1 },
+  scrollContent: { padding: 24 },
+  topSpacer: { height: 0, marginBottom: 15 },
+  headerSection: { marginBottom: 32 },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
+  subtitle: { fontSize: 16 },
+  section: { marginBottom: 24 },
+  sectionLabel: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginBottom: 12, marginLeft: 8 },
+  card: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', padding: 16 },
+  iconContainer: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  menuContent: { flex: 1 },
+  menuTitle: { fontSize: 17, fontWeight: '600' },
+  menuSubtitle: { fontSize: 13, marginTop: 2 },
+  separator: { height: 1, marginLeft: 76 },
 });
 
 export default MoreScreen;

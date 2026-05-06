@@ -22,6 +22,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
 import { tripService } from '../services/tripService';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
@@ -39,6 +41,7 @@ LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
 const CreateTripScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   const { setActiveTrip } = useTrip();
   const placesRef = useRef<any>(null);
   
@@ -98,36 +101,36 @@ const CreateTripScreen = () => {
   };
 
   const markedDates: any = {};
-  if (startDate) markedDates[startDate] = { selected: true, startingDay: true, color: '#007AFF' };
-  if (endDate) markedDates[endDate] = { selected: true, endingDay: true, color: '#007AFF' };
+  if (startDate) markedDates[startDate] = { selected: true, startingDay: true, color: colors.primary };
+  if (endDate) markedDates[endDate] = { selected: true, endingDay: true, color: colors.primary };
 
   const isFormValid = name && location && startDate && endDate;
 
   const headerComponent = (
     <View style={styles.scrollContent}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+        <Ionicons name="arrow-back" size={24} color={colors.text} />
       </TouchableOpacity>
 
       <View style={styles.header}>
-        <Text style={styles.title}>Nuevo Viaje</Text>
-        <Text style={styles.subtitle}>Configura tu próxima aventura en segundos</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Nuevo Viaje</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Configura tu próxima aventura en segundos</Text>
       </View>
 
       <View style={styles.form}>
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nombre del Viaje</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Nombre del Viaje</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
             placeholder="Ej: Graduación 2026"
-            placeholderTextColor="#8E8E93"
+            placeholderTextColor={colors.textSecondary}
             value={name}
             onChangeText={setName}
           />
         </View>
 
         <View style={[styles.inputGroup, { zIndex: 10 }]}>
-          <Text style={styles.label}>Lugar</Text>
+          <Text style={[styles.label, { color: colors.text }]}>Lugar</Text>
           <GooglePlacesAutocomplete
             ref={placesRef}
             placeholder="¿A dónde vamos?"
@@ -148,7 +151,7 @@ const CreateTripScreen = () => {
             enablePoweredByContainer={false}
             styles={{
               textInputContainer: {
-                backgroundColor: '#F2F2F7',
+                backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7',
                 borderRadius: 12,
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -157,13 +160,13 @@ const CreateTripScreen = () => {
               textInput: {
                 height: 50,
                 backgroundColor: 'transparent',
-                color: '#1C1C1E',
+                color: colors.text,
                 fontSize: 16,
                 paddingHorizontal: 15,
                 marginBottom: 0,
               },
               listView: {
-                backgroundColor: '#fff',
+                backgroundColor: isDark ? '#1C1C1E' : '#fff',
                 borderRadius: 12,
                 marginTop: 5,
                 elevation: 3,
@@ -172,19 +175,28 @@ const CreateTripScreen = () => {
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
                 zIndex: 1000,
+                borderWidth: isDark ? 1 : 0,
+                borderColor: colors.border,
               },
               row: {
                 padding: 13,
                 height: 50,
                 flexDirection: 'row',
+                backgroundColor: isDark ? '#1C1C1E' : '#fff',
               },
               separator: {
                 height: 1,
-                backgroundColor: '#F2F2F7',
+                backgroundColor: colors.separator,
               },
+              description: {
+                color: colors.text,
+              },
+              poweredContainer: {
+                backgroundColor: isDark ? '#1C1C1E' : '#fff',
+              }
             }}
             textInputProps={{
-              placeholderTextColor: '#8E8E93',
+              placeholderTextColor: colors.textSecondary,
               onChangeText: (text) => {
                 if (text === '') {
                   setLocation('');
@@ -201,7 +213,7 @@ const CreateTripScreen = () => {
                   setLatitude(undefined);
                   setLongitude(undefined);
                 }}>
-                  <Ionicons name="close-circle" size={20} color="#8E8E93" />
+                  <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
               ) : null
             )}
@@ -209,21 +221,27 @@ const CreateTripScreen = () => {
         </View>
 
         <View style={styles.dateContainer}>
-          <TouchableOpacity style={styles.datePicker} onPress={() => { setShowCalendar(true); setSelectingStartDate(true); }}>
-            <Text style={styles.label}>Fecha Inicio</Text>
+          <TouchableOpacity 
+            style={[styles.datePicker, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]} 
+            onPress={() => { setShowCalendar(true); setSelectingStartDate(true); }}
+          >
+            <Text style={[styles.label, { color: colors.text }]}>Fecha Inicio</Text>
             <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={18} color="#007AFF" />
-              <Text style={[styles.dateValue, !startDate ? { color: '#8E8E93' } : null]}>
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+              <Text style={[styles.dateValue, { color: colors.text }, !startDate ? { color: colors.textSecondary } : null]}>
                 {startDate || 'Día inicial'}
               </Text>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.datePicker} onPress={() => { setShowCalendar(true); setSelectingStartDate(false); }}>
-            <Text style={styles.label}>Fecha Fin</Text>
+          <TouchableOpacity 
+            style={[styles.datePicker, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]} 
+            onPress={() => { setShowCalendar(true); setSelectingStartDate(false); }}
+          >
+            <Text style={[styles.label, { color: colors.text }]}>Fecha Fin</Text>
             <View style={styles.dateRow}>
-              <Ionicons name="calendar-outline" size={18} color="#007AFF" />
-              <Text style={[styles.dateValue, !endDate ? { color: '#8E8E93' } : null]}>
+              <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+              <Text style={[styles.dateValue, { color: colors.text }, !endDate ? { color: colors.textSecondary } : null]}>
                 {endDate || 'Día final'}
               </Text>
             </View>
@@ -238,7 +256,7 @@ const CreateTripScreen = () => {
           disabled={!isFormValid || creating}
         >
           <LinearGradient
-            colors={(!isFormValid || creating) ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+            colors={(!isFormValid || creating) ? [colors.border, colors.border] : ['#007AFF', '#00C6FF']}
             style={styles.gradientButton}
           >
             {creating ? (
@@ -256,7 +274,8 @@ const CreateTripScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.flexOne}
@@ -271,23 +290,40 @@ const CreateTripScreen = () => {
       </KeyboardAvoidingView>
 
       <Modal visible={showCalendar} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.calendarModal}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.modalOverlay }]}>
+          <View style={[styles.calendarModal, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {selectingStartDate ? 'Selecciona fecha de inicio' : 'Selecciona fecha de fin'}
               </Text>
               <TouchableOpacity onPress={() => setShowCalendar(false)}>
-                <Ionicons name="close-circle" size={28} color="#8E8E93" />
+                <Ionicons name="close-circle" size={28} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <Calendar
               onDayPress={handleDayPress}
               markedDates={markedDates}
               theme={{
-                selectedDayBackgroundColor: '#007AFF',
-                todayTextColor: '#007AFF',
-                arrowColor: '#007AFF',
+                backgroundColor: colors.card,
+                calendarBackground: colors.card,
+                textSectionTitleColor: colors.textSecondary,
+                selectedDayBackgroundColor: colors.primary,
+                selectedDayTextColor: '#ffffff',
+                todayTextColor: colors.primary,
+                dayTextColor: colors.text,
+                textDisabledColor: isDark ? '#48484A' : '#d9e1e8',
+                dotColor: colors.primary,
+                selectedDotColor: '#ffffff',
+                arrowColor: colors.primary,
+                disabledArrowColor: colors.border,
+                monthTextColor: colors.text,
+                indicatorColor: colors.primary,
+                textDayFontWeight: '400',
+                textMonthFontWeight: 'bold',
+                textDayHeaderFontWeight: '600',
+                textDayFontSize: 16,
+                textMonthFontSize: 18,
+                textDayHeaderFontSize: 14
               }}
             />
           </View>
@@ -298,29 +334,29 @@ const CreateTripScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   flexOne: { flex: 1 },
   scrollContent: { padding: 24 },
   backButton: { marginBottom: 20, width: 40, height: 40, justifyContent: 'center' },
   header: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#8E8E93' },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
+  subtitle: { fontSize: 16 },
   form: { gap: 24 },
   inputGroup: { gap: 8 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C' },
-  input: { backgroundColor: '#F2F2F7', padding: 16, borderRadius: 12, fontSize: 16, color: '#1C1C1E' },
+  label: { fontSize: 14, fontWeight: '600' },
+  input: { padding: 16, borderRadius: 12, fontSize: 16 },
   dateContainer: { flexDirection: 'row', gap: 16 },
-  datePicker: { flex: 1, backgroundColor: '#F2F2F7', padding: 16, borderRadius: 12, gap: 8 },
+  datePicker: { flex: 1, padding: 16, borderRadius: 12, gap: 8 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dateValue: { fontSize: 15, color: '#1C1C1E', fontWeight: '500' },
+  dateValue: { fontSize: 15, fontWeight: '500' },
   footer: { marginTop: 48, marginBottom: 40 },
   createButton: { borderRadius: 16, overflow: 'hidden' },
   gradientButton: { paddingVertical: 18, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
   createButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  calendarModal: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  calendarModal: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E' },
+  modalTitle: { fontSize: 18, fontWeight: 'bold' },
 });
 
 export default CreateTripScreen;

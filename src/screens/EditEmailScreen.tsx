@@ -15,10 +15,13 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const EditEmailScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   
   const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
@@ -51,35 +54,36 @@ const EditEmailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerSection}>
-          <Text style={styles.title}>Correo Electrónico</Text>
-          <Text style={styles.subtitle}>Gestiona tu dirección de contacto</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Correo Electrónico</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestiona tu dirección de contacto</Text>
         </View>
 
         <View style={styles.content}>
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={24} color="#007AFF" />
-            <Text style={styles.infoText}>
+          <View style={[styles.infoBox, { backgroundColor: isDark ? '#1C1C1E' : '#F0F8FF' }]}>
+            <Ionicons name="information-circle-outline" size={24} color={isDark ? colors.primary : "#007AFF"} />
+            <Text style={[styles.infoText, { color: isDark ? colors.textSecondary : "#005BB5" }]}>
               Tu correo electrónico se utiliza para iniciar sesión y enviarte notificaciones sobre tus viajes.
             </Text>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Nuevo Correo Electrónico</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Nuevo Correo Electrónico</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
               placeholder="ejemplo@correo.com"
-              placeholderTextColor="#8E8E93"
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
@@ -89,7 +93,7 @@ const EditEmailScreen = () => {
             disabled={loading}
           >
             <LinearGradient
-              colors={loading ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+              colors={loading ? [colors.border, colors.border] : ['#007AFF', '#00C6FF']}
               style={styles.gradientButton}
             >
               {loading ? (
@@ -106,7 +110,7 @@ const EditEmailScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   scrollContent: { padding: 24 },
   backButton: {
     marginBottom: 20,
@@ -120,32 +124,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1C1C1E',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#8E8E93',
   },
   content: { flex: 1 },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#F0F8FF',
     padding: 16,
     borderRadius: 12,
     marginBottom: 32,
     alignItems: 'center',
   },
-  infoText: { flex: 1, marginLeft: 12, fontSize: 14, color: '#005BB5', lineHeight: 20 },
+  infoText: { flex: 1, marginLeft: 12, fontSize: 14, lineHeight: 20 },
   formGroup: { marginBottom: 32 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   input: {
-    backgroundColor: '#F2F2F7',
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     fontSize: 16,
-    color: '#1C1C1E',
   },
   saveButton: { borderRadius: 16, overflow: 'hidden' },
   gradientButton: { paddingVertical: 16, alignItems: 'center' },

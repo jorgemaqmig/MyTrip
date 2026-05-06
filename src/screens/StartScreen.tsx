@@ -16,9 +16,11 @@ import { useTrip } from '../context/TripContext';
 import { tripService, Trip } from '../services/tripService';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 52) / 2;
+const CARD_WIDTH = (width - 48) / 2; // Ajustado para el padding de 16
 
 const ICON_COLORS = {
   create:  '#FF6B35',
@@ -30,6 +32,7 @@ const ICON_COLORS = {
 const StartScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const { colors, isDark } = useTheme();
   const { setActiveTrip } = useTrip();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [currentTripIndex, setCurrentTripIndex] = useState(0);
@@ -81,7 +84,7 @@ const StartScreen = () => {
     if (trips.length > 0 && currentTrip) {
       return (
         <TouchableOpacity
-          style={styles.heroCard}
+          style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border }]}
           activeOpacity={0.7}
           onPress={() => {
             setActiveTrip(currentTrip);
@@ -90,27 +93,29 @@ const StartScreen = () => {
         >
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.heroTop}>
-              <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.trips + '10' }]}>
+              <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.trips + '15' }]}>
                 <Ionicons name="airplane" size={20} color={ICON_COLORS.trips} />
               </View>
               <View style={styles.heroMeta}>
-                <Text style={styles.heroPill}>{currentTrip.status}</Text>
+                <View style={[styles.heroPill, { backgroundColor: isDark ? '#2C2C2E' : '#F0F0F0' }]}>
+                  <Text style={[styles.heroPillText, { color: colors.textSecondary }]}>{currentTrip.status}</Text>
+                </View>
                 {trips.length > 1 && (
-                  <Text style={styles.heroCounter}>{currentTripIndex + 1}/{trips.length}</Text>
+                  <Text style={[styles.heroCounter, { color: colors.textSecondary }]}>{currentTripIndex + 1}/{trips.length}</Text>
                 )}
               </View>
             </View>
 
-            <Text style={styles.heroTitle} numberOfLines={1}>{currentTrip.name}</Text>
+            <Text style={[styles.heroTitle, { color: colors.text }]} numberOfLines={1}>{currentTrip.name}</Text>
             
             <View style={styles.heroDetails}>
               <View style={styles.heroDetailItem}>
-                <Ionicons name="location-outline" size={13} color="#999" />
-                <Text style={styles.heroDetailText} numberOfLines={1}>{currentTrip.location}</Text>
+                <Ionicons name="location-outline" size={13} color={colors.textSecondary} />
+                <Text style={[styles.heroDetailText, { color: colors.textSecondary }]} numberOfLines={1}>{currentTrip.location}</Text>
               </View>
               <View style={styles.heroDetailItem}>
-                <Ionicons name="calendar-outline" size={13} color="#999" />
-                <Text style={styles.heroDetailText}>
+                <Ionicons name="calendar-outline" size={13} color={colors.textSecondary} />
+                <Text style={[styles.heroDetailText, { color: colors.textSecondary }]}>
                   {formatDate(currentTrip.startDate)} — {formatDate(currentTrip.endDate)}
                 </Text>
               </View>
@@ -123,6 +128,7 @@ const StartScreen = () => {
                     key={i}
                     style={[
                       styles.dot,
+                      { backgroundColor: isDark ? '#3A3A3C' : '#DDD' },
                       i === currentTripIndex && [styles.dotActive, { backgroundColor: ICON_COLORS.trips }],
                     ]}
                   />
@@ -136,30 +142,31 @@ const StartScreen = () => {
 
     return (
       <TouchableOpacity
-        style={styles.heroCard}
+        style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border }]}
         activeOpacity={0.7}
         onPress={() => navigation.navigate('CreateTrip')}
       >
         <View style={styles.heroTop}>
-          <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.create + '10' }]}>
+          <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.create + '15' }]}>
             <Ionicons name="add" size={20} color={ICON_COLORS.create} />
           </View>
         </View>
-        <Text style={styles.heroTitle}>Crea tu primer viaje</Text>
-        <Text style={styles.heroSubtitle}>Planifica tu próxima aventura</Text>
+        <Text style={[styles.heroTitle, { color: colors.text }]}>Crea tu primer viaje</Text>
+        <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>Planifica tu próxima aventura</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       {/* Top Bar with Settings */}
       <View style={styles.topBar}>
         <TouchableOpacity 
-          style={styles.settingsBtn} 
+          style={[styles.settingsBtn, { backgroundColor: colors.card, borderColor: colors.border }]} 
           onPress={() => navigation.navigate('Settings')}
         >
-          <Ionicons name="settings-outline" size={22} color="#555" />
+          <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -167,10 +174,10 @@ const StartScreen = () => {
         
         {/* Logo Section */}
         <View style={styles.brandSection}>
-          <View style={styles.logoIcon}>
+          <View style={[styles.logoIcon, { backgroundColor: isDark ? colors.card : '#1A1A1A' }]}>
             <Ionicons name="airplane" size={32} color="#fff" />
           </View>
-          <Text style={styles.brandName}>My<Text style={styles.brandNameBold}>Trip</Text></Text>
+          <Text style={[styles.brandName, { color: colors.text }]}>My<Text style={styles.brandNameBold}>Trip</Text></Text>
         </View>
 
         {/* Hero */}
@@ -179,54 +186,78 @@ const StartScreen = () => {
         {/* Grid */}
         <View style={styles.grid}>
           {trips.length > 0 ? (
-            <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => navigation.navigate('CreateTrip')}>
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '10' }]}>
+            <TouchableOpacity 
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+              activeOpacity={0.7} 
+              onPress={() => navigation.navigate('CreateTrip')}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '15' }]}>
                 <Ionicons name="add-circle-outline" size={22} color={ICON_COLORS.create} />
               </View>
-              <Text style={styles.cardTitle}>Crear Viaje</Text>
-              <Text style={styles.cardSub}>Nueva aventura</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Crear Viaje</Text>
+              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Nueva aventura</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => navigation.navigate('MyTrips')}>
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '10' }]}>
+            <TouchableOpacity 
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+              activeOpacity={0.7} 
+              onPress={() => navigation.navigate('MyTrips')}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '15' }]}>
                 <Ionicons name="map-outline" size={22} color={ICON_COLORS.trips} />
               </View>
-              <Text style={styles.cardTitle}>Mis Viajes</Text>
-              <Text style={styles.cardSub}>Tus aventuras</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Mis Viajes</Text>
+              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Tus aventuras</Text>
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => navigation.navigate('JoinTrip')}>
-            <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.join + '10' }]}>
+          <TouchableOpacity 
+            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+            activeOpacity={0.7} 
+            onPress={() => navigation.navigate('JoinTrip')}
+          >
+            <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.join + '15' }]}>
               <Ionicons name="people-outline" size={22} color={ICON_COLORS.join} />
             </View>
-            <Text style={styles.cardTitle}>Unirse</Text>
-            <Text style={styles.cardSub}>Código de viaje</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Unirse</Text>
+            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Código de viaje</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => navigation.navigate('Social')}>
-            <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.social + '10' }]}>
+          <TouchableOpacity 
+            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+            activeOpacity={0.7} 
+            onPress={() => navigation.navigate('Social')}
+          >
+            <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.social + '15' }]}>
               <Ionicons name="chatbubble-outline" size={22} color={ICON_COLORS.social} />
             </View>
-            <Text style={styles.cardTitle}>Social</Text>
-            <Text style={styles.cardSub}>Amigos</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Social</Text>
+            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Amigos</Text>
           </TouchableOpacity>
 
           {trips.length > 0 ? (
-            <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => navigation.navigate('MyTrips')}>
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '10' }]}>
+            <TouchableOpacity 
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+              activeOpacity={0.7} 
+              onPress={() => navigation.navigate('MyTrips')}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '15' }]}>
                 <Ionicons name="map-outline" size={22} color={ICON_COLORS.trips} />
               </View>
-              <Text style={styles.cardTitle}>Mis Viajes</Text>
-              <Text style={styles.cardSub}>{trips.length} {trips.length === 1 ? 'viaje' : 'viajes'}</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Mis Viajes</Text>
+              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>{trips.length} {trips.length === 1 ? 'viaje' : 'viajes'}</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.card} activeOpacity={0.7} onPress={() => navigation.navigate('CreateTrip')}>
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '10' }]}>
+            <TouchableOpacity 
+              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+              activeOpacity={0.7} 
+              onPress={() => navigation.navigate('CreateTrip')}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '15' }]}>
                 <Ionicons name="compass-outline" size={22} color={ICON_COLORS.create} />
               </View>
-              <Text style={styles.cardTitle}>Explorar</Text>
-              <Text style={styles.cardSub}>Descubre</Text>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>Explorar</Text>
+              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Descubre</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -239,7 +270,6 @@ const StartScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F7F7',
   },
   scrollContent: {
     padding: 16,
@@ -257,7 +287,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 18,
-    backgroundColor: '#1A1A1A',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -265,7 +294,6 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 28,
     fontWeight: '400',
-    color: '#1A1A1A',
     letterSpacing: -1,
   },
   brandNameBold: {
@@ -283,21 +311,17 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#EBEBEB',
   },
 
   // Hero
   heroCard: {
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#EBEBEB',
   },
   heroTop: {
     flexDirection: 'row',
@@ -309,7 +333,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#F3F3F3',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -319,29 +342,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroPill: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#666',
-    backgroundColor: '#F0F0F0',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
-    overflow: 'hidden',
+  },
+  heroPillText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   heroCounter: {
     fontSize: 11,
-    color: '#BBB',
     fontWeight: '600',
   },
   heroTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A1A1A',
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 14,
-    color: '#999',
     marginTop: 2,
   },
   heroDetails: {
@@ -354,7 +373,6 @@ const styles = StyleSheet.create({
   },
   heroDetailText: {
     fontSize: 13,
-    color: '#888',
     fontWeight: '400',
     flex: 1,
   },
@@ -368,10 +386,8 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#DDD',
   },
   dotActive: {
-    backgroundColor: '#555',
     width: 14,
   },
 
@@ -384,19 +400,16 @@ const styles = StyleSheet.create({
   },
   card: {
     width: CARD_WIDTH,
-    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 18,
     minHeight: CARD_WIDTH * 0.8,
     justifyContent: 'flex-end',
     borderWidth: 1,
-    borderColor: '#EBEBEB',
   },
   cardIcon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#F3F3F3',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
@@ -404,11 +417,9 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1A1A',
   },
   cardSub: {
     fontSize: 12,
-    color: '#AAA',
     marginTop: 2,
     fontWeight: '400',
   },

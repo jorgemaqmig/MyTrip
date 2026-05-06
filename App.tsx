@@ -8,21 +8,23 @@ import AppNavigator from './src/navigation/AppNavigator';
 
 import { AuthProvider } from './src/context/AuthContext';
 import { TripProvider } from './src/context/TripContext';
+import { ThemeProvider } from './src/context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <AuthProvider>
-          <TripProvider>
-            <NavigationContainer>
-              <AppNavigator />
-            </NavigationContainer>
-            <StatusBar style="auto" />
-          </TripProvider>
-        </AuthProvider>
-
+        <ThemeProvider>
+          <AuthProvider>
+            <TripProvider>
+              <NavigationContainer>
+                <AppNavigator />
+              </NavigationContainer>
+              <StatusBar style="auto" />
+            </TripProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -17,10 +17,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation<any>();
   const { user, userData } = useAuth();
+  const { colors, isDark } = useTheme();
   
   const [name, setName] = useState(user?.displayName || '');
   const [imageUri, setImageUri] = useState<string | null>(userData?.photoURL || null);
@@ -110,15 +113,16 @@ const EditProfileScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerSection}>
-          <Text style={styles.title}>Editar Perfil</Text>
-          <Text style={styles.subtitle}>Actualiza tu información pública</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Editar Perfil</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Actualiza tu información pública</Text>
         </View>
 
         <View style={styles.content}>
@@ -131,21 +135,21 @@ const EditProfileScreen = () => {
                   <Ionicons name="person" size={50} color="#fff" />
                 </LinearGradient>
               )}
-              <View style={styles.editBadge}>
+              <View style={[styles.editBadge, { borderColor: colors.background }]}>
                 <Ionicons name="camera" size={16} color="#fff" />
               </View>
             </TouchableOpacity>
-            <Text style={styles.avatarHint}>Toca para cambiar la foto</Text>
+            <Text style={[styles.avatarHint, { color: colors.textSecondary }]}>Toca para cambiar la foto</Text>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Nombre</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Nombre</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
               value={name}
               onChangeText={setName}
               placeholder="Tu nombre completo"
-              placeholderTextColor="#8E8E93"
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
 
@@ -155,7 +159,7 @@ const EditProfileScreen = () => {
             disabled={loading}
           >
             <LinearGradient
-              colors={loading ? ['#E5E5EA', '#D1D1D6'] : ['#007AFF', '#00C6FF']}
+              colors={loading ? [colors.border, colors.border] : ['#007AFF', '#00C6FF']}
               style={styles.gradientButton}
             >
               {loading ? (
@@ -172,7 +176,7 @@ const EditProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   scrollContent: { padding: 24 },
   backButton: {
     marginBottom: 20,
@@ -186,12 +190,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1C1C1E',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#8E8E93',
   },
   content: { flex: 1 },
   avatarSection: { alignItems: 'center', marginBottom: 40 },
@@ -209,18 +211,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#fff',
   },
-  avatarHint: { marginTop: 16, fontSize: 14, color: '#8E8E93' },
+  avatarHint: { marginTop: 16, fontSize: 14 },
   formGroup: { marginBottom: 32 },
-  label: { fontSize: 14, fontWeight: '600', color: '#3A3A3C', marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   input: {
-    backgroundColor: '#F2F2F7',
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     fontSize: 16,
-    color: '#1C1C1E',
   },
   saveButton: { borderRadius: 16, overflow: 'hidden' },
   gradientButton: { paddingVertical: 16, alignItems: 'center' },
