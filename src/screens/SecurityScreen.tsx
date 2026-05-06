@@ -6,21 +6,27 @@ import {
   TextInput, 
   TouchableOpacity, 
   ActivityIndicator,
-  Alert
+  Alert,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { authService } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 const SecurityScreen = () => {
   const navigation = useNavigation<any>();
+  const { user } = useAuth();
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Detectar si el usuario es de Google
+  const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com');
 
   const handleSave = async () => {
     if (password.length < 6) {
@@ -59,65 +65,105 @@ const SecurityScreen = () => {
         <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.infoBox}>
-          <Ionicons name="shield-checkmark-outline" size={24} color="#34C759" />
-          <Text style={styles.infoText}>
-            Usa una contraseña segura de al menos 6 caracteres. Te recomendamos combinar letras y números.
-          </Text>
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Nueva Contraseña</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              placeholder="••••••••"
-              placeholderTextColor="#8E8E93"
-            />
-            <TouchableOpacity 
-              style={styles.eyeIcon} 
-              onPress={() => setShowPassword(!showPassword)}
+      <ScrollView contentContainerStyle={styles.content}>
+        {isGoogleUser ? (
+          <View style={styles.googleUserContainer}>
+            <LinearGradient
+              colors={['#4285F410', '#4285F405']}
+              style={styles.googleCard}
             >
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#8E8E93" />
+              <View style={styles.googleHeader}>
+                <Ionicons name="logo-google" size={40} color="#4285F4" />
+                <View style={styles.badge}>
+                  <Ionicons name="shield-checkmark" size={14} color="#fff" />
+                  <Text style={styles.badgeText}>Vinculada</Text>
+                </View>
+              </View>
+              
+              <Text style={styles.googleTitle}>Cuenta Protegida</Text>
+              <Text style={styles.googleSubtitle}>
+                Tu sesión está gestionada por Google. Tu seguridad y contraseña dependen de tu configuración de Google Account.
+              </Text>
+              
+              <TouchableOpacity 
+                style={styles.externalButton}
+                onPress={() => Alert.alert('Información', 'Para gestionar tu contraseña, visita la configuración de tu cuenta de Google.')}
+              >
+                <Text style={styles.externalButtonText}>Gestionar en Google</Text>
+                <Ionicons name="open-outline" size={18} color="#4285F4" />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <View style={styles.tipBox}>
+              <Ionicons name="bulb-outline" size={20} color="#FF9500" />
+              <Text style={styles.tipText}>
+                Al usar Google, disfrutas de autenticación en dos pasos y mayor protección sin necesidad de recordar otra contraseña.
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View>
+            <View style={styles.infoBox}>
+              <Ionicons name="shield-checkmark-outline" size={24} color="#34C759" />
+              <Text style={styles.infoText}>
+                Usa una contraseña segura de al menos 6 caracteres. Te recomendamos combinar letras y números.
+              </Text>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Nueva Contraseña</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor="#8E8E93"
+                />
+                <TouchableOpacity 
+                  style={styles.eyeIcon} 
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Confirmar Contraseña</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showPassword}
+                  placeholder="••••••••"
+                  placeholderTextColor="#8E8E93"
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.saveButton} 
+              onPress={handleSave}
+              disabled={loading || !password || !confirmPassword}
+            >
+              <LinearGradient
+                colors={(loading || !password || !confirmPassword) ? ['#E5E5EA', '#D1D1D6'] : ['#5856D6', '#8E8DFF']}
+                style={styles.gradientButton}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>
+                )}
+              </LinearGradient>
             </TouchableOpacity>
           </View>
-        </View>
+        )}
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Confirmar Contraseña</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showPassword}
-              placeholder="••••••••"
-              placeholderTextColor="#8E8E93"
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.saveButton} 
-          onPress={handleSave}
-          disabled={loading || !password || !confirmPassword}
-        >
-          <LinearGradient
-            colors={(loading || !password || !confirmPassword) ? ['#E5E5EA', '#D1D1D6'] : ['#5856D6', '#8E8DFF']}
-            style={styles.gradientButton}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -136,6 +182,45 @@ const styles = StyleSheet.create({
   backButton: { width: 40, height: 40, justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1C1C1E' },
   content: { padding: 24 },
+  
+  // Google User Styles
+  googleUserContainer: { alignItems: 'center' },
+  googleCard: {
+    width: '100%',
+    padding: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#4285F420',
+    alignItems: 'center',
+  },
+  googleHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 16 },
+  badge: { 
+    backgroundColor: '#34C759', 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8,
+    marginLeft: -10,
+    marginTop: 25,
+  },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold', marginLeft: 2 },
+  googleTitle: { fontSize: 22, fontWeight: 'bold', color: '#1C1C1E', marginBottom: 12 },
+  googleSubtitle: { fontSize: 15, color: '#3A3A3C', textAlign: 'center', lineHeight: 22, marginBottom: 20 },
+  externalButton: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  externalButtonText: { color: '#4285F4', fontWeight: 'bold', fontSize: 16 },
+  tipBox: { 
+    flexDirection: 'row', 
+    backgroundColor: '#FFF9F2', 
+    padding: 16, 
+    borderRadius: 16, 
+    marginTop: 24, 
+    gap: 12,
+    alignItems: 'center'
+  },
+  tipText: { flex: 1, fontSize: 13, color: '#A05E03', lineHeight: 18 },
+
+  // Form Styles
   infoBox: {
     flexDirection: 'row',
     backgroundColor: '#F0FFF4',
@@ -164,6 +249,19 @@ const styles = StyleSheet.create({
   saveButton: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
   gradientButton: { paddingVertical: 16, alignItems: 'center' },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+
+  // Extra Section
+  extraSection: { marginTop: 40 },
+  sectionTitle: { fontSize: 14, fontWeight: 'bold', color: '#8E8E93', textTransform: 'uppercase', marginBottom: 16, marginLeft: 8 },
+  secondaryOption: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 16, 
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+  },
+  secondaryOptionText: { flex: 1, fontSize: 16, color: '#1C1C1E', marginLeft: 12 },
 });
 
 export default SecurityScreen;

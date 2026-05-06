@@ -16,7 +16,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 GoogleSignin.configure({
   webClientId: '638295579061-2hjblsi2kh06vvvkvk0fc9d6vjc0svfp.apps.googleusercontent.com',
   offlineAccess: false,
-  scopes: ['profile', 'email'], // Añadimos scopes explícitos
+  scopes: ['profile', 'email'],
 });
 
 export const authService = {
@@ -51,7 +51,6 @@ export const authService = {
     try {
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       
-      // Forzar cierre de sesión previo para limpiar cualquier estado corrupto
       try {
         await GoogleSignin.signOut();
       } catch (e) {}
@@ -80,6 +79,20 @@ export const authService = {
         throw "Error de configuración (DEVELOPER_ERROR). Verifica que el SHA-1 en Firebase sea el de Expo.";
       }
       throw error.message || "Error al iniciar con Google";
+    }
+  },
+
+  // Actualizar contraseña
+  updateUserPassword: async (newPassword: string) => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await updatePassword(user, newPassword);
+      } else {
+        throw new Error("No hay usuario autenticado");
+      }
+    } catch (error: any) {
+      throw error.message;
     }
   },
 

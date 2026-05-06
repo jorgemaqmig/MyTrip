@@ -19,6 +19,7 @@ import MyTripsScreen from '../screens/MyTripsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import EditEmailScreen from '../screens/EditEmailScreen';
 import SecurityScreen from '../screens/SecurityScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -82,6 +83,7 @@ const AppNavigator = () => {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="EditEmail" component={EditEmailScreen} />
       <Stack.Screen name="Security" component={SecurityScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   );
 };
