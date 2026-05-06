@@ -49,7 +49,9 @@ const MainTabs = () => {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: any;
 
-          if (route.name === 'Mapa') {
+          if (route.name === 'Inicio') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Mapa') {
             iconName = focused ? 'map' : 'map-outline';
           } else if (route.name === 'Itinerario') {
             iconName = focused ? 'calendar' : 'calendar-outline';
@@ -63,21 +65,27 @@ const MainTabs = () => {
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
           backgroundColor: colors.tabBar,
-          borderTopColor: colors.separator,
-          borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 88 : 65,
-          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-          paddingTop: 10,
-          elevation: 0,
-          shadowOpacity: 0,
+          position: 'absolute',
+          bottom: 35,
+          marginHorizontal: 20,
+          borderRadius: 30,
+          height: 60,
+          paddingBottom: 8,
+          paddingTop: 8,
+          borderTopWidth: 0,
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.15,
+          shadowRadius: 10,
+          borderWidth: 1,
+          borderColor: colors.border,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
-        },
+        tabBarShowLabel: false,
         headerShown: false,
       })}
     >
+      <Tab.Screen name="Inicio" component={StartScreen} />
       <Tab.Screen name="Mapa" component={MapScreen} />
       <Tab.Screen name="Itinerario" component={ItineraryScreen} />
       <Tab.Screen name="Más" component={MoreStackNavigation} />
@@ -87,7 +95,7 @@ const MainTabs = () => {
 
 const AppNavigator = () => {
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       initialRouteName="Login"
       screenOptions={{ headerShown: false }}
     >

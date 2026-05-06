@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   emptyState: { paddingVertical: 12 },
   emptyText: { fontSize: 14, fontStyle: 'italic' },
   backButton: { position: 'absolute', top: Platform.OS === 'ios' ? 55 : 35, right: 20, width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  fab: { position: 'absolute', bottom: 30, right: 20, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 5 }
+  fab: { position: 'absolute', bottom: 110, right: 20, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 5 }
 });
 
 export default ItineraryScreen;
