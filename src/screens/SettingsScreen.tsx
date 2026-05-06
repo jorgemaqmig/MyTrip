@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   ScrollView,
   Dimensions,
   Image,
-  Alert
+  Alert,
+  Modal,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,11 +18,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const SettingsScreen = () => {
   const navigation = useNavigation<any>();
   const { user, userData } = useAuth();
+  const [showGoogleEmailModal, setShowGoogleEmailModal] = useState(false);
 
   const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com');
 
@@ -82,7 +85,7 @@ const SettingsScreen = () => {
               <Ionicons name="camera" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.profileInfo}>
             <Text style={styles.userName}>{userData?.displayName || user?.displayName || 'Usuario'}</Text>
             <View style={styles.emailBadge}>
@@ -114,7 +117,7 @@ const SettingsScreen = () => {
               color="#32ADE6"
               onPress={() => {
                 if (isGoogleUser) {
-                  Alert.alert('Información', 'Tu correo está vinculado a Google. Debes cambiarlo desde tu cuenta de Google.');
+                  setShowGoogleEmailModal(true);
                 } else {
                   navigation.navigate('EditEmail');
                 }
@@ -168,12 +171,50 @@ const SettingsScreen = () => {
             />
           </View>
         </View>
-        
-        <View style={styles.footer}>
-          <Text style={styles.versionText}>MyTrip v1.0.0</Text>
-          <Text style={styles.footerInfo}>Hecho para tu TFG</Text>
-        </View>
       </ScrollView>
+
+      {/* Modal Personalizado de Google Email */}
+      <Modal
+        visible={showGoogleEmailModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowGoogleEmailModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <LinearGradient
+              colors={['#4285F415', '#fff']}
+              style={styles.modalGradient}
+            >
+              <View style={styles.modalIconContainer}>
+                <Ionicons name="logo-google" size={40} color="#4285F4" />
+                <View style={styles.modalLockBadge}>
+                  <Ionicons name="lock-closed" size={12} color="#fff" />
+                </View>
+              </View>
+
+              <Text style={styles.modalTitle}>Correo gestionado por Google</Text>
+              <Text style={styles.modalText}>
+                Tu cuenta está vinculada a Google. Por seguridad, cualquier cambio en tu dirección de correo debe realizarse directamente en la configuración de tu cuenta de Google.
+              </Text>
+
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setShowGoogleEmailModal(false)}
+              >
+                <LinearGradient
+                  colors={['#4285F4', '#4285F4']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.modalButtonGradient}
+                >
+                  <Text style={styles.modalButtonText}>Entendido</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -200,9 +241,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8E8E93',
   },
-  
+
   // Profile Card
-  profileCard: { 
+  profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F2F2F7',
@@ -241,10 +282,100 @@ const styles = StyleSheet.create({
   settingTitle: { fontSize: 16, color: '#1C1C1E', fontWeight: '500' },
   settingSubtitle: { fontSize: 13, color: '#8E8E93', marginTop: 2 },
   separator: { height: 1, backgroundColor: '#F2F2F7', marginLeft: 68 },
-  
+
   footer: { paddingVertical: 20, alignItems: 'center' },
   versionText: { fontSize: 14, color: '#D1D1D6', fontWeight: 'bold' },
   footerInfo: { fontSize: 12, color: '#D1D1D6', marginTop: 4 },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 30,
+    overflow: 'hidden',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+  },
+  modalGradient: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  modalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    position: 'relative'
+  },
+  modalLockBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#EA4335',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff'
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1C1C1E',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  modalText: {
+    fontSize: 15,
+    color: '#3A3A3C',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  modalButton: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  modalButtonGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalSecondaryButton: {
+    paddingVertical: 12,
+  },
+  modalSecondaryButtonText: {
+    color: '#8E8E93',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });
 
 export default SettingsScreen;
