@@ -91,15 +91,9 @@ const EditProfileScreen = () => {
 
     setLoading(true);
     try {
-      let photoURL = user?.photoURL;
-      
-      if (imageUri && imageUri !== user?.photoURL) {
-        photoURL = imageUri;
-      }
-
       await authService.updateUserProfile({
         displayName: name,
-        photoURL: photoURL || undefined
+        photoURL: imageUri || undefined
       });
       
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
@@ -117,12 +111,12 @@ const EditProfileScreen = () => {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerSection}>
-          <Text style={[styles.title, { color: colors.text }]}>Editar Perfil</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Actualiza tu información pública</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Mi Perfil</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Personaliza tu identidad en MyTrip</Text>
         </View>
 
         <View style={styles.content}>
@@ -131,21 +125,31 @@ const EditProfileScreen = () => {
               {imageUri ? (
                 <Image source={{ uri: imageUri }} style={styles.avatarImage} />
               ) : (
-                <LinearGradient colors={['#007AFF', '#00C6FF']} style={styles.avatarGradient}>
-                  <Ionicons name="person" size={50} color="#fff" />
-                </LinearGradient>
+                <View style={[styles.avatarPlaceholder, { backgroundColor: isDark ? '#2C2C2E' : '#E1E1E1' }]}>
+                  <Ionicons name="person" size={50} color={isDark ? '#48484A' : '#A9A9A9'} />
+                </View>
               )}
-              <View style={[styles.editBadge, { borderColor: colors.background }]}>
-                <Ionicons name="camera" size={16} color="#fff" />
-              </View>
+              <LinearGradient 
+                colors={[colors.primary, isDark ? '#47a1ff' : '#0056b3']} 
+                style={styles.editBadge}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="camera" size={18} color="#fff" />
+              </LinearGradient>
             </TouchableOpacity>
-            <Text style={[styles.avatarHint, { color: colors.textSecondary }]}>Toca para cambiar la foto</Text>
+            <Text style={[styles.avatarHint, { color: colors.primary, fontWeight: '600' }]}>Cambiar foto</Text>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Nombre</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>NOMBRE COMPLETO</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
+              style={[styles.input, { 
+                backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', 
+                color: colors.text,
+                borderColor: colors.border,
+                borderWidth: isDark ? 1 : 0
+              }]}
               value={name}
               onChangeText={setName}
               placeholder="Tu nombre completo"
@@ -159,13 +163,15 @@ const EditProfileScreen = () => {
             disabled={loading}
           >
             <LinearGradient
-              colors={loading ? [colors.border, colors.border] : ['#007AFF', '#00C6FF']}
+              colors={loading ? [colors.border, colors.border] : [colors.primary, isDark ? '#47a1ff' : '#0056b3']}
               style={styles.gradientButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+                <Text style={styles.saveButtonText}>Guardar cambios</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
@@ -199,29 +205,29 @@ const styles = StyleSheet.create({
   avatarSection: { alignItems: 'center', marginBottom: 40 },
   avatarContainer: { position: 'relative' },
   avatarImage: { width: 120, height: 120, borderRadius: 60 },
-  avatarGradient: { width: 120, height: 120, borderRadius: 60, justifyContent: 'center', alignItems: 'center' },
+  avatarPlaceholder: { width: 120, height: 120, borderRadius: 60, justifyContent: 'center', alignItems: 'center' },
   editBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#007AFF',
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
+    borderColor: 'transparent',
   },
-  avatarHint: { marginTop: 16, fontSize: 14 },
+  avatarHint: { marginTop: 12, fontSize: 14 },
   formGroup: { marginBottom: 32 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  label: { fontSize: 12, fontWeight: '700', marginBottom: 10, letterSpacing: 0.5 },
   input: {
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     fontSize: 16,
   },
-  saveButton: { borderRadius: 16, overflow: 'hidden' },
+  saveButton: { borderRadius: 16, overflow: 'hidden', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
   gradientButton: { paddingVertical: 16, alignItems: 'center' },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });

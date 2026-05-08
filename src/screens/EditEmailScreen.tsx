@@ -43,10 +43,13 @@ const EditEmailScreen = () => {
       Alert.alert('Éxito', 'Correo electrónico actualizado correctamente');
       navigation.goBack();
     } catch (e: any) {
-      if (e.includes('requires-recent-login')) {
-        Alert.alert('Por seguridad', 'Debes cerrar sesión y volver a entrar antes de cambiar el correo.');
+      const errorMessage = e.toString();
+      if (errorMessage.includes('requires-recent-login')) {
+        Alert.alert('Seguridad', 'Por razones de seguridad, debes haber iniciado sesión recientemente para cambiar tu correo. Por favor, cierra sesión y vuelve a entrar.');
+      } else if (errorMessage.includes('email-already-in-use')) {
+        Alert.alert('Error', 'Este correo ya está registrado en otra cuenta.');
       } else {
-        Alert.alert('Error', 'No se pudo actualizar el correo. Comprueba que no esté en uso.');
+        Alert.alert('Error', 'No se pudo actualizar el correo. Inténtalo de nuevo más tarde.');
       }
     } finally {
       setLoading(false);
@@ -58,7 +61,7 @@ const EditEmailScreen = () => {
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerSection}>
@@ -67,17 +70,22 @@ const EditEmailScreen = () => {
         </View>
 
         <View style={styles.content}>
-          <View style={[styles.infoBox, { backgroundColor: isDark ? '#1C1C1E' : '#F0F8FF' }]}>
-            <Ionicons name="information-circle-outline" size={24} color={isDark ? colors.primary : "#007AFF"} />
-            <Text style={[styles.infoText, { color: isDark ? colors.textSecondary : "#005BB5" }]}>
-              Tu correo electrónico se utiliza para iniciar sesión y enviarte notificaciones sobre tus viajes.
+          <View style={[styles.infoBox, { backgroundColor: isDark ? '#2C2C2E' : '#F0F7FF', borderColor: isDark ? colors.border : '#CCE5FF', borderWidth: 1 }]}>
+            <Ionicons name="information-circle" size={24} color={isDark ? colors.primary : "#007AFF"} />
+            <Text style={[styles.infoText, { color: colors.text }]}>
+              Tu correo se utiliza para iniciar sesión y enviarte notificaciones importantes sobre tus viajes.
             </Text>
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={[styles.label, { color: colors.text }]}>Nuevo Correo Electrónico</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>NUEVO CORREO ELECTRÓNICO</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
+              style={[styles.input, { 
+                backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', 
+                color: colors.text,
+                borderColor: colors.border,
+                borderWidth: isDark ? 1 : 0
+              }]}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -93,13 +101,15 @@ const EditEmailScreen = () => {
             disabled={loading}
           >
             <LinearGradient
-              colors={loading ? [colors.border, colors.border] : ['#007AFF', '#00C6FF']}
+              colors={loading ? [colors.border, colors.border] : [colors.primary, isDark ? '#47a1ff' : '#0056b3']}
               style={styles.gradientButton}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.saveButtonText}>Actualizar Correo</Text>
+                <Text style={styles.saveButtonText}>Guardar cambios</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>

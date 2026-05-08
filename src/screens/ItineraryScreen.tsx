@@ -116,11 +116,14 @@ const ItineraryScreen = () => {
 
   // --- RENDERERS ---
   const renderNormalPoint = (point: TripPoint) => (
-    <View key={point.id} style={[styles.pointCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={[styles.colorBar, { backgroundColor: point.color }]} />
+    <View key={point.id} style={[styles.pointCard, { backgroundColor: colors.card }]}>
+      <View style={[styles.pointDot, { backgroundColor: point.color }]} />
       <View style={styles.pointInfo}>
         <Text style={[styles.pointName, { color: colors.text }]} numberOfLines={1}>{point.name}</Text>
-        <Text style={[styles.pointAddress, { color: colors.textSecondary }]} numberOfLines={1}>{point.locationName}</Text>
+        <View style={styles.pointMeta}>
+          <Ionicons name="location-outline" size={12} color={colors.textSecondary} />
+          <Text style={[styles.pointAddress, { color: colors.textSecondary }]} numberOfLines={1}>{point.locationName}</Text>
+        </View>
       </View>
     </View>
   );
@@ -134,24 +137,25 @@ const ItineraryScreen = () => {
           disabled={isActive}
           style={[styles.draggableRow, isActive && styles.draggableRowActive]}
         >
-          <View style={styles.dragHandle}>
-            <Ionicons name="reorder-two" size={26} color={isDark ? '#48484A' : '#CCC'} />
-          </View>
+          <Ionicons name="reorder-three" size={22} color={isDark ? '#636366' : '#AEAEB2'} style={{ marginRight: 8 }} />
           
-          <View style={[styles.pointCard, { flex: 1, marginVertical: 0, backgroundColor: colors.card, borderColor: isActive ? colors.primary : colors.border }]}>
-            <View style={[styles.colorBar, { backgroundColor: item.color }]} />
+          <View style={[styles.pointCard, { flex: 1, backgroundColor: colors.card, borderColor: isActive ? colors.primary : 'transparent', borderWidth: isActive ? 1 : 0 }]}>
+            <View style={[styles.pointDot, { backgroundColor: item.color }]} />
             <View style={styles.pointInfo}>
               <Text style={[styles.pointName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
-              <Text style={[styles.pointAddress, { color: colors.textSecondary }]} numberOfLines={1}>{item.locationName}</Text>
+              <View style={styles.pointMeta}>
+                <Ionicons name="location-outline" size={12} color={colors.textSecondary} />
+                <Text style={[styles.pointAddress, { color: colors.textSecondary }]} numberOfLines={1}>{item.locationName}</Text>
+              </View>
             </View>
           </View>
           
           <View style={styles.editActionsGroup}>
-            <TouchableOpacity onPress={() => handleDuplicate(item)} style={[styles.miniIconBtn, { backgroundColor: isDark ? '#2C2C2E' : '#F8F8F8' }]}>
-              <Ionicons name="copy-outline" size={18} color={colors.primary} />
+            <TouchableOpacity onPress={() => handleDuplicate(item)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="copy-outline" size={18} color={colors.textSecondary} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDelete(item.id)} style={[styles.miniIconBtn, { backgroundColor: isDark ? '#2C2C2E' : '#F8F8F8' }]}>
-              <Ionicons name="trash-outline" size={18} color="#FF6B35" />
+            <TouchableOpacity onPress={() => handleDelete(item.id)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="trash-outline" size={18} color="#FF3B30" />
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -164,43 +168,51 @@ const ItineraryScreen = () => {
     const dayPoints = isEditing ? localDayPoints : points.filter(p => p.dayIndex === dayIndex).sort((a,b) => a.order - b.order);
 
     return (
-      <View key={`day-${dayIndex}`} style={[styles.daySection, isEditing && [styles.editingSection, { backgroundColor: colors.card }]]}>
-        <View style={styles.dayHeader}>
-          <View style={[styles.dayIcon, { backgroundColor: isUnassigned ? (isDark ? '#2C2C2E' : '#F2F2F7') : colors.primary + '15' }]}>
-            {isUnassigned ? (
-              <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
-            ) : (
-              <Text style={[styles.dayIconText, { color: colors.primary }]}>{dayIndex}</Text>
-            )}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.dayTitle, { color: colors.text }]}>{title}</Text>
-            <Text style={[styles.daySubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.dayEditButton, isEditing && [styles.daySaveButton, { backgroundColor: colors.primary }]]} 
-            onPress={() => toggleEditDay(dayIndex)}
-          >
-            <Ionicons name={isEditing ? "checkmark" : "pencil"} size={22} color={isEditing ? "#FFF" : colors.primary} />
-          </TouchableOpacity>
+      <View key={`day-${dayIndex}`}>
+        {/* Cabecera de día centrada */}
+        <View style={styles.daySeparatorBlock}>
+          <Text style={[styles.dayTitleText, { color: colors.text }]}>{title}</Text>
+          <View style={[styles.daySeparatorLine, { backgroundColor: colors.separator }]} />
+          <Text style={[styles.dayDateText, { color: colors.textSecondary }]}>{subtitle}</Text>
         </View>
 
-        <View style={[styles.pointsList, { borderLeftColor: isDark ? '#2C2C2E' : '#EBEBEB' }]}>
-          {dayPoints.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Vacío. Añade lugares desde el mapa.</Text>
-            </View>
-          ) : isEditing ? (
-            <NestableDraggableFlatList
-              data={dayPoints}
-              renderItem={renderDraggablePoint}
-              keyExtractor={(item) => item.id!}
-              onDragEnd={({ data }) => setLocalDayPoints(data)}
-            />
-          ) : (
-            dayPoints.map(renderNormalPoint)
-          )}
+        <View style={[styles.daySection, isEditing && [styles.editingSection, { backgroundColor: isDark ? '#1C1C1E' : '#F9F9FB' }]]}>
+          {/* Botón editar alineado a la derecha */}
+          <View style={styles.editRow}>
+            <TouchableOpacity 
+              style={[
+                styles.dayEditButton, 
+                { backgroundColor: isEditing ? colors.primary : (isDark ? '#2C2C2E' : '#F2F2F7') }
+              ]} 
+              onPress={() => toggleEditDay(dayIndex)}
+            >
+              <Ionicons 
+                name={isEditing ? "checkmark" : "create-outline"} 
+                size={16} 
+                color={isEditing ? "#FFF" : colors.textSecondary} 
+              />
+              <Text style={[styles.editLabel, { color: isEditing ? '#FFF' : colors.textSecondary }]}>
+                {isEditing ? 'Guardar' : 'Editar'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.pointsList}>
+            {dayPoints.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Sin lugares añadidos</Text>
+              </View>
+            ) : isEditing ? (
+              <NestableDraggableFlatList
+                data={dayPoints}
+                renderItem={renderDraggablePoint}
+                keyExtractor={(item) => item.id!}
+                onDragEnd={({ data }) => setLocalDayPoints(data)}
+              />
+            ) : (
+              dayPoints.map(renderNormalPoint)
+            )}
+          </View>
         </View>
       </View>
     );
@@ -218,23 +230,11 @@ const ItineraryScreen = () => {
         {points.filter(p => p.dayIndex === 0).length > 0 && 
           renderDaySection("Sin Asignar", "Puntos pendientes", 0, true)
         }
-        {tripDays.map((day) => renderDaySection(`Día ${day.index}`, day.dateString, day.index))}
-        <View style={{height: 100}} />
+        {tripDays.map((day) => 
+          renderDaySection(`Día ${day.index}`, day.dateString, day.index)
+        )}
+        <View style={{ height: 120 }} />
       </NestableScrollContainer>
-
-      <TouchableOpacity 
-        style={[styles.fab, { backgroundColor: colors.primary }]} 
-        onPress={() => navigation.navigate('Mapa')}
-      >
-        <Ionicons name="map" size={24} color="#FFF" />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.backButton, { backgroundColor: isDark ? '#2C2C2E' : '#F3F3F3' }]} 
-        onPress={() => navigation.navigate('Start')}
-      >
-        <Ionicons name="chevron-down" size={28} color={colors.text} />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -250,40 +250,100 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '800' },
   subtitle: { fontSize: 16, marginTop: 4 },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 24 },
-  daySection: { marginBottom: 24 },
-  editingSection: {
-    padding: 12,
-    marginHorizontal: -12,
-    borderRadius: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+  scrollContent: { paddingHorizontal: 24, paddingTop: 8 },
+
+  // --- Cabecera de día centrada ---
+  daySeparatorBlock: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 8,
   },
-  dayHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
-  dayIcon: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  dayIconText: { fontSize: 16, fontWeight: '800' },
-  dayTitle: { fontSize: 22, fontWeight: '700' },
-  daySubtitle: { fontSize: 13, marginTop: 2 },
-  dayEditButton: { padding: 8, borderRadius: 20 },
-  daySaveButton: { paddingHorizontal: 16, paddingVertical: 8 },
-  pointsList: { marginLeft: 20, paddingLeft: 20, borderLeftWidth: 2 },
-  pointCard: { borderRadius: 12, flexDirection: 'row', alignItems: 'center', overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, borderWidth: 1, marginVertical: 4 },
-  colorBar: { width: 6, height: '100%' },
-  pointInfo: { flex: 1, padding: 12 },
-  pointName: { fontSize: 16, fontWeight: '600' },
-  pointAddress: { fontSize: 12, marginTop: 2 },
-  draggableRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 2 },
-  draggableRowActive: { opacity: 0.9, transform: [{ scale: 1.03 }] },
-  dragHandle: { padding: 8 },
-  editActionsGroup: { flexDirection: 'row', gap: 6, paddingLeft: 6 },
-  miniIconBtn: { padding: 8, borderRadius: 15 },
-  emptyState: { paddingVertical: 12 },
-  emptyText: { fontSize: 14, fontStyle: 'italic' },
-  backButton: { position: 'absolute', top: Platform.OS === 'ios' ? 55 : 35, right: 20, width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  fab: { position: 'absolute', bottom: 110, right: 20, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 5 }
+  dayTitleText: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  daySeparatorLine: {
+    width: '100%',
+    height: StyleSheet.hairlineWidth,
+  },
+  dayDateText: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 6,
+  },
+
+  // --- Secciones de día ---
+  daySection: { 
+    paddingBottom: 8,
+  },
+  editingSection: {
+    paddingHorizontal: 12,
+    marginHorizontal: -12,
+    borderRadius: 14,
+  },
+  editRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  dayEditButton: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10, 
+    paddingVertical: 5, 
+    borderRadius: 16,
+    gap: 4,
+  },
+  editLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // --- Tarjetas de lugar ---
+  pointsList: { gap: 6 },
+  pointCard: { 
+    borderRadius: 12, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  pointDot: { 
+    width: 10, 
+    height: 10, 
+    borderRadius: 5, 
+    marginRight: 12,
+  },
+  pointInfo: { flex: 1 },
+  pointName: { fontSize: 15, fontWeight: '600' },
+  pointMeta: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 3, 
+    marginTop: 3,
+  },
+  pointAddress: { fontSize: 12 },
+
+  // --- Modo edición ---
+  draggableRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginVertical: 3,
+  },
+  draggableRowActive: { 
+    opacity: 0.85, 
+    transform: [{ scale: 1.02 }],
+  },
+  editActionsGroup: { 
+    flexDirection: 'row', 
+    gap: 14, 
+    paddingLeft: 10,
+  },
+
+  // --- Estado vacío ---
+  emptyState: { paddingVertical: 16 },
+  emptyText: { fontSize: 14 },
 });
 
 export default ItineraryScreen;

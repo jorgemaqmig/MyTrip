@@ -96,11 +96,51 @@ export const authService = {
     }
   },
 
+  // Actualizar email
+  updateUserEmail: async (newEmail: string) => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        await updateEmail(user, newEmail);
+        // También actualizamos en Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          email: newEmail,
+          lastUpdated: new Date()
+        }, { merge: true });
+      } else {
+        throw new Error("No hay usuario autenticado");
+      }
+    } catch (error: any) {
+      throw error.message;
+    }
+  },
+
   // Cerrar sesión
   logout: async () => {
     try {
       await signOut(auth);
       await GoogleSignin.signOut();
+    } catch (error: any) {
+      throw error.message;
+    }
+  },
+
+  // Actualizar perfil (nombre y foto)
+  updateUserProfile: async (data: { displayName?: string, photoURL?: string }) => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        // Actualizamos perfil en Firebase Auth
+        await updateProfile(user, data);
+        
+        // También actualizamos en Firestore para persistencia
+        await setDoc(doc(db, 'users', user.uid), {
+          ...data,
+          lastUpdated: new Date()
+        }, { merge: true });
+      } else {
+        throw new Error("No hay usuario autenticado");
+      }
     } catch (error: any) {
       throw error.message;
     }

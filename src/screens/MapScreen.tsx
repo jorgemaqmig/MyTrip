@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Alert, Platform } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,6 +41,15 @@ const MapScreen = () => {
   const [points, setPoints] = useState<TripPoint[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<any>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const googlePlacesRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => setShowSuccess(false), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
 
   const initialRegion = {
     latitude: activeTrip?.latitude || 40.4168,
@@ -95,6 +104,11 @@ const MapScreen = () => {
       longitude: details.geometry.location.lng,
     });
     setModalVisible(true);
+    
+    // Limpiamos el texto del buscador de forma segura
+    if (googlePlacesRef.current) {
+      googlePlacesRef.current.setAddressText('');
+    }
   };
 
   const handleAddPoint = async (dayIndex: number) => {
@@ -114,15 +128,35 @@ const MapScreen = () => {
       setModalVisible(false);
       setSelectedPlace(null);
       fetchPoints();
-      Alert.alert('Éxito', 'Punto añadido al itinerario');
+      setShowSuccess(true);
     } catch (error) {
       Alert.alert('Error', 'No se pudo añadir el punto');
     }
   };
 
+  // Memorizamos la query para que el buscador no se reinicie en cada render
+  const googleQuery = React.useMemo(() => ({
+    key: GOOGLE_MAPS_API_KEY,
+    language: 'es',
+    location: `${activeTrip?.latitude},${activeTrip?.longitude}`,
+    radius: 50000,
+  }), [activeTrip?.latitude, activeTrip?.longitude]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+      
+      {/* Toast de Éxito Personalizado */}
+      {showSuccess && (
+        <View style={styles.successToastContainer}>
+          <View style={[styles.successToast, { backgroundColor: isDark ? '#2C2C2E' : '#FFFFFF', borderColor: colors.border }]}>
+            <View style={[styles.successIconCircle, { backgroundColor: colors.primary }]}>
+              <Ionicons name="checkmark" size={16} color="#FFF" />
+            </View>
+            <Text style={[styles.successText, { color: colors.text }]}>Lugar añadido con éxito</Text>
+          </View>
+        </View>
+      )}
       <MapView
         provider={PROVIDER_GOOGLE}
         style={styles.map}
@@ -142,15 +176,13 @@ const MapScreen = () => {
 
       <View style={styles.searchContainer}>
         <GooglePlacesAutocomplete
+          ref={googlePlacesRef}
           placeholder="Buscar sitios para visitar..."
           onPress={handlePlaceSelect}
           fetchDetails={true}
-          query={{
-            key: GOOGLE_MAPS_API_KEY,
-            language: 'es',
-            location: `${activeTrip?.latitude},${activeTrip?.longitude}`,
-            radius: 50000,
-          }}
+          minLength={2}
+          debounce={400}
+          query={googleQuery}
           styles={{
             container: styles.autocompleteContainer,
             textInput: [styles.searchInput, { backgroundColor: isDark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.95)', color: colors.text }],
@@ -160,7 +192,11 @@ const MapScreen = () => {
             description: { color: colors.text },
           }}
           enablePoweredByContainer={false}
-          textInputProps={{ placeholderTextColor: colors.textSecondary }}
+          suppressDefaultStyles={false}
+          textInputProps={{ 
+            placeholderTextColor: colors.textSecondary,
+            clearButtonMode: 'while-editing'
+          }}
         />
       </View>
 
@@ -236,6 +272,39 @@ const styles = StyleSheet.create({
   dayOptionText: { fontSize: 16, fontWeight: '500' },
   dayTitleText: { fontSize: 16, fontWeight: '600' },
   dayDateText: { fontSize: 13, marginTop: 2 },
+  successToastContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 120 : 100,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  successToast: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    borderWidth: 1,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    gap: 10,
+  },
+  successIconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  successText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });
 
 export default MapScreen;

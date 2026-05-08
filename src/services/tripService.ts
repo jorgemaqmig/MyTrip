@@ -21,8 +21,10 @@ export interface Trip {
   longitude?: number;
   startDate: string;
   endDate: string;
-  numPeople?: number; // Ahora es opcional con el "?"
+  numPeople?: number;
   status: 'Próximamente' | 'Planeado' | 'En curso' | 'Finalizado';
+  image?: string;
+  isPublished?: boolean;
   createdAt: any;
 }
 
@@ -32,6 +34,7 @@ export const tripService = {
     try {
       const docRef = await addDoc(collection(db, 'trips'), {
         ...tripData,
+        isPublished: false, // Por defecto no publicado
         createdAt: Timestamp.now()
       });
       return docRef.id;
@@ -44,7 +47,6 @@ export const tripService = {
   // Obtener viajes del usuario
   getUserTrips: async (userId: string) => {
     try {
-      // Hacemos una query simple sin orderBy para evitar el error de índice compuesto de Firestore
       const q = query(
         collection(db, 'trips'), 
         where('userId', '==', userId)
@@ -57,13 +59,23 @@ export const tripService = {
         trips.push({ id: docSnap.id, ...docSnap.data() } as Trip);
       });
       
-      // Ordenamos localmente por fecha de inicio
       return trips.sort((a, b) => {
         if (!a.startDate || !b.startDate) return 0;
         return a.startDate.localeCompare(b.startDate);
       });
     } catch (error: any) {
       console.error("Error getting documents: ", error);
+      throw error;
+    }
+  },
+
+  // Actualizar un viaje
+  updateTrip: async (tripId: string, tripData: Partial<Trip>) => {
+    try {
+      const tripRef = doc(db, 'trips', tripId);
+      await updateDoc(tripRef, tripData);
+    } catch (error: any) {
+      console.error("Error updating trip: ", error);
       throw error;
     }
   },

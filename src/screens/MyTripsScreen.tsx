@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   FlatList, 
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -74,17 +75,29 @@ const MyTripsScreen = () => {
           navigation.navigate('MainTabs');
         }}
       >
-        <LinearGradient
-          colors={color}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.cardHeader}
-        >
-          <Ionicons name="airplane" size={30} color="#fff" />
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{item.status}</Text>
-          </View>
-        </LinearGradient>
+        <View style={styles.cardHeaderContainer}>
+          {item.image ? (
+            <Image source={{ uri: item.image }} style={styles.headerImage} />
+          ) : (
+            <LinearGradient
+              colors={color}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          )}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.5)', 'rgba(0,0,0,0.1)']}
+            style={[StyleSheet.absoluteFill, styles.headerOverlay]}
+          >
+            <View style={styles.headerContent}>
+              <Ionicons name="airplane" size={30} color="#fff" />
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusText}>{item.status}</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
         
         <View style={styles.cardBody}>
           <View style={styles.mainInfo}>
@@ -121,7 +134,7 @@ const MyTripsScreen = () => {
           <View>
             <View style={styles.topActions}>
               <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                <Ionicons name="arrow-back" size={24} color={colors.text} />
+                <Ionicons name="chevron-back" size={28} color={colors.text} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('CreateTrip')}>
                 <Ionicons name="add-circle" size={32} color={colors.primary} />
@@ -184,7 +197,10 @@ const styles = StyleSheet.create({
   activeTab: { borderBottomWidth: 3 },
   tabText: { fontSize: 15, fontWeight: '600' },
   tripCard: { borderRadius: 24, marginBottom: 20, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, borderWidth: 1 },
-  cardHeader: { height: 100, padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardHeaderContainer: { height: 120, position: 'relative' },
+  headerImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  headerOverlay: { padding: 20, justifyContent: 'center' },
+  headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   statusBadge: { backgroundColor: 'rgba(255, 255, 255, 0.25)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
   statusText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   cardBody: { padding: 20 },

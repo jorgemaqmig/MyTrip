@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
   ScrollView,
   Alert
 } from 'react-native';
@@ -38,8 +38,8 @@ const MoreScreen = () => {
       '¿Estás seguro de que quieres eliminar este viaje? Esta acción no se puede deshacer.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Eliminar', 
+        {
+          text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -82,25 +82,25 @@ const MoreScreen = () => {
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Gestión del Viaje</Text>
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <MenuItem 
-              icon="wallet-outline" 
-              title="Gastos" 
+            <MenuItem
+              icon="wallet-outline"
+              title="Gastos"
               subtitle="Controla el presupuesto del grupo"
               color="#32ADE6"
               onPress={() => navigation.navigate('Gastos')}
             />
             <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-            <MenuItem 
-              icon="document-lock-outline" 
-              title="Caja Fuerte" 
+            <MenuItem
+              icon="document-lock-outline"
+              title="Caja Fuerte"
               subtitle="Tus documentos importantes offline"
               color="#5856D6"
               onPress={() => navigation.navigate('Documentos')}
             />
             <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-            <MenuItem 
-              icon="people-outline" 
-              title="Invitar Amigos" 
+            <MenuItem
+              icon="people-outline"
+              title="Invitar Amigos"
               subtitle="Comparte el código del viaje"
               color="#FF9500"
               onPress={() => { }}
@@ -111,17 +111,17 @@ const MoreScreen = () => {
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Configuración</Text>
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <MenuItem 
-              icon="options-outline" 
-              title="Ajustes del Viaje" 
-              subtitle="Nombre, fechas y participantes"
+            <MenuItem
+              icon="options-outline"
+              title="Ajustes del Viaje"
+              subtitle="Nombre, fechas y más"
               color="#8E8E93"
-              onPress={() => { }}
+              onPress={() => navigation.navigate('TripSettings')}
             />
             <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-            <MenuItem 
-              icon="trash-outline" 
-              title="Eliminar Viaje" 
+            <MenuItem
+              icon="trash-outline"
+              title="Eliminar Viaje"
               subtitle="Esta acción no se puede deshacer"
               color="#FF3B30"
               onPress={handleDeleteTrip}

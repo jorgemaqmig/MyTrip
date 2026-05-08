@@ -4,9 +4,9 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  ScrollView,
   FlatList,
-  Dimensions
+  Dimensions,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,7 +38,10 @@ const ExpensesScreen = () => {
         <Text style={[styles.expenseTitle, { color: colors.text }]}>{item.title}</Text>
         <Text style={[styles.expenseCategory, { color: colors.textSecondary }]}>{item.category} • {item.date}</Text>
       </View>
-      <Text style={[styles.expenseAmount, { color: colors.text }]}>-{item.amount.toFixed(2)}€</Text>
+      <View style={styles.amountContainer}>
+        <Text style={[styles.expenseAmount, { color: colors.text }]}>-{item.amount.toFixed(2)}€</Text>
+        <Ionicons name="chevron-forward" size={14} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+      </View>
     </TouchableOpacity>
   );
 
@@ -48,14 +51,16 @@ const ExpensesScreen = () => {
       
       <View style={styles.topHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.addButton}>
           <LinearGradient
-            colors={['#007AFF', '#00C6FF']}
+            colors={[colors.primary, isDark ? '#47a1ff' : '#0056b3']}
             style={styles.plusButton}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
           >
-            <Ionicons name="add" size={24} color="#fff" />
+            <Ionicons name="add" size={28} color="#fff" />
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -70,31 +75,46 @@ const ExpensesScreen = () => {
           <View>
             <View style={styles.header}>
               <Text style={[styles.title, { color: colors.text }]}>Gastos del Viaje</Text>
-              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestiona el presupuesto del grupo</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Controla el presupuesto de tu aventura</Text>
             </View>
 
             <LinearGradient
-              colors={['#1C1C1E', '#3A3A3C']}
+              colors={isDark ? ['#2C2C2E', '#1C1C1E'] : [colors.primary, '#00C6FF']}
               style={styles.summaryCard}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             >
               <View style={styles.summaryRow}>
                 <View>
-                  <Text style={styles.summaryLabel}>Total Gastado</Text>
+                  <Text style={[styles.summaryLabel, { color: isDark ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.8)' }]}>Total Gastado</Text>
                   <Text style={styles.summaryValue}>253.50€</Text>
                 </View>
-                <View style={styles.budgetBadge}>
-                  <Text style={styles.budgetText}>Presupuesto: 1000€</Text>
+                <View style={[styles.budgetBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                  <Text style={styles.budgetText}>Meta: 1000€</Text>
                 </View>
               </View>
               
               <View style={styles.progressBarBg}>
-                <View style={[styles.progressBarFill, { width: '25%' }]} />
+                <LinearGradient
+                  colors={['#34C759', '#30D158']}
+                  style={[styles.progressBarFill, { width: '25%' }]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                />
               </View>
               
-              <Text style={styles.remainingText}>Te quedan 746.50€ para gastar</Text>
+              <View style={styles.remainingRow}>
+                <Ionicons name="trending-down" size={16} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.remainingText}>Te quedan 746.50€ disponibles</Text>
+              </View>
             </LinearGradient>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Actividad Reciente</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Actividad reciente</Text>
+              <TouchableOpacity>
+                <Text style={{ color: colors.primary, fontWeight: '600' }}>Ver todo</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         }
       />
@@ -104,56 +124,72 @@ const ExpensesScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  listContent: { padding: 24, paddingBottom: 40 },
+  listContent: { padding: 24, paddingBottom: 100 },
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: 10,
+    marginBottom: 10,
   },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  plusButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
-  header: { marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
-  subtitle: { fontSize: 16 },
+  backButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  addButton: { width: 48, height: 48 },
+  plusButton: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
+  header: { marginBottom: 28 },
+  title: { fontSize: 32, fontWeight: '800', letterSpacing: -0.5, marginBottom: 6 },
+  subtitle: { fontSize: 16, lineHeight: 22 },
   
   // Summary Card
   summaryCard: {
     padding: 24,
-    borderRadius: 28,
-    marginBottom: 32,
+    borderRadius: 30,
+    marginBottom: 36,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
   },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-  summaryLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  summaryValue: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
-  budgetBadge: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-  budgetText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  progressBarBg: { height: 8, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 4, marginBottom: 12 },
-  progressBarFill: { height: '100%', backgroundColor: '#34C759', borderRadius: 4 },
-  remainingText: { color: 'rgba(255,255,255,0.6)', fontSize: 13 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
+  summaryLabel: { fontSize: 14, fontWeight: '700', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  summaryValue: { color: '#fff', fontSize: 36, fontWeight: '800' },
+  budgetBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  budgetText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  progressBarBg: { height: 10, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 5, marginBottom: 16, overflow: 'hidden' },
+  progressBarFill: { height: '100%', borderRadius: 5 },
+  remainingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  remainingText: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '500' },
 
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: '800' },
   
   // Expense Card
   expenseCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 12,
+    padding: 14,
+    borderRadius: 22,
+    marginBottom: 14,
     borderWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      }
+    })
   },
-  categoryIcon: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  categoryIcon: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   expenseInfo: { flex: 1 },
-  expenseTitle: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
-  expenseCategory: { fontSize: 13 },
-  expenseAmount: { fontSize: 16, fontWeight: 'bold' },
+  expenseTitle: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
+  expenseCategory: { fontSize: 13, fontWeight: '500' },
+  amountContainer: { flexDirection: 'row', alignItems: 'center' },
+  expenseAmount: { fontSize: 16, fontWeight: '800' },
 });
 
 export default ExpensesScreen;

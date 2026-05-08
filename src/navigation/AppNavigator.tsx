@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import MapScreen from '../screens/MapScreen';
 import ItineraryScreen from '../screens/ItineraryScreen';
@@ -29,6 +29,8 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const MoreStack = createNativeStackNavigator();
 
+import TripSettingsScreen from '../screens/TripSettingsScreen';
+
 // Stack para la pestaña "Más"
 const MoreStackNavigation = () => {
   return (
@@ -36,6 +38,7 @@ const MoreStackNavigation = () => {
       <MoreStack.Screen name="MoreMain" component={MoreScreen} />
       <MoreStack.Screen name="Gastos" component={ExpensesScreen} />
       <MoreStack.Screen name="Documentos" component={VaultScreen} />
+      <MoreStack.Screen name="TripSettings" component={TripSettingsScreen} />
     </MoreStack.Navigator>
   );
 };
@@ -45,11 +48,14 @@ const MainTabs = () => {
 
   return (
     <Tab.Navigator
+      initialRouteName="Mapa"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: any;
 
-          if (route.name === 'Mapa') {
+          if (route.name === 'Inicio') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Mapa') {
             iconName = focused ? 'map' : 'map-outline';
           } else if (route.name === 'Itinerario') {
             iconName = focused ? 'calendar' : 'calendar-outline';
@@ -62,7 +68,7 @@ const MainTabs = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.tabBar,
+          backgroundColor: isDark ? 'rgba(28, 28, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
           position: 'absolute',
           bottom: 35,
           marginHorizontal: 20,
@@ -70,19 +76,28 @@ const MainTabs = () => {
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
-          borderTopWidth: 0,
-          elevation: 10,
+          elevation: 0, // Quitamos la elevación rígida de Android para un look más suave
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.15,
-          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
           borderWidth: 1,
-          borderColor: colors.border,
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)',
         },
         tabBarShowLabel: false,
         headerShown: false,
       })}
     >
+      <Tab.Screen 
+        name="Inicio" 
+        component={View} 
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Start');
+          },
+        })}
+      />
       <Tab.Screen name="Mapa" component={MapScreen} />
       <Tab.Screen name="Itinerario" component={ItineraryScreen} />
       <Tab.Screen name="Más" component={MoreStackNavigation} />

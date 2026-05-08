@@ -7,10 +7,12 @@ import {
   ScrollView, 
   Dimensions,
   Animated,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
 import { tripService, Trip } from '../services/tripService';
@@ -91,31 +93,43 @@ const StartScreen = () => {
             navigation.navigate('MainTabs');
           }}
         >
+          {currentTrip.image && (
+            <Image 
+              source={{ uri: currentTrip.image }} 
+              style={[StyleSheet.absoluteFill, { borderRadius: 16 }]} 
+            />
+          )}
+          {currentTrip.image && (
+            <LinearGradient
+              colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)']}
+              style={[StyleSheet.absoluteFill, { borderRadius: 16 }]}
+            />
+          )}
           <Animated.View style={{ opacity: fadeAnim }}>
             <View style={styles.heroTop}>
-              <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.trips + '15' }]}>
-                <Ionicons name="airplane" size={20} color={ICON_COLORS.trips} />
+              <View style={[styles.heroIconWrap, { backgroundColor: currentTrip.image ? 'rgba(255,255,255,0.2)' : ICON_COLORS.trips + '15' }]}>
+                <Ionicons name="airplane" size={20} color={currentTrip.image ? '#fff' : ICON_COLORS.trips} />
               </View>
               <View style={styles.heroMeta}>
-                <View style={[styles.heroPill, { backgroundColor: isDark ? '#2C2C2E' : '#F0F0F0' }]}>
-                  <Text style={[styles.heroPillText, { color: colors.textSecondary }]}>{currentTrip.status}</Text>
+                <View style={[styles.heroPill, { backgroundColor: currentTrip.image ? 'rgba(255,255,255,0.2)' : (isDark ? '#2C2C2E' : '#F0F0F0') }]}>
+                  <Text style={[styles.heroPillText, { color: currentTrip.image ? '#fff' : colors.textSecondary }]}>{currentTrip.status}</Text>
                 </View>
                 {trips.length > 1 && (
-                  <Text style={[styles.heroCounter, { color: colors.textSecondary }]}>{currentTripIndex + 1}/{trips.length}</Text>
+                  <Text style={[styles.heroCounter, { color: currentTrip.image ? '#fff' : colors.textSecondary }]}>{currentTripIndex + 1}/{trips.length}</Text>
                 )}
               </View>
             </View>
 
-            <Text style={[styles.heroTitle, { color: colors.text }]} numberOfLines={1}>{currentTrip.name}</Text>
+            <Text style={[styles.heroTitle, { color: currentTrip.image ? '#fff' : colors.text }]} numberOfLines={1}>{currentTrip.name}</Text>
             
             <View style={styles.heroDetails}>
               <View style={styles.heroDetailItem}>
-                <Ionicons name="location-outline" size={13} color={colors.textSecondary} />
-                <Text style={[styles.heroDetailText, { color: colors.textSecondary }]} numberOfLines={1}>{currentTrip.location}</Text>
+                <Ionicons name="location-outline" size={13} color={currentTrip.image ? 'rgba(255,255,255,0.8)' : colors.textSecondary} />
+                <Text style={[styles.heroDetailText, { color: currentTrip.image ? 'rgba(255,255,255,0.8)' : colors.textSecondary }]} numberOfLines={1}>{currentTrip.location}</Text>
               </View>
               <View style={styles.heroDetailItem}>
-                <Ionicons name="calendar-outline" size={13} color={colors.textSecondary} />
-                <Text style={[styles.heroDetailText, { color: colors.textSecondary }]}>
+                <Ionicons name="calendar-outline" size={13} color={currentTrip.image ? 'rgba(255,255,255,0.8)' : colors.textSecondary} />
+                <Text style={[styles.heroDetailText, { color: currentTrip.image ? 'rgba(255,255,255,0.8)' : colors.textSecondary }]}>
                   {formatDate(currentTrip.startDate)} — {formatDate(currentTrip.endDate)}
                 </Text>
               </View>
@@ -128,8 +142,8 @@ const StartScreen = () => {
                     key={i}
                     style={[
                       styles.dot,
-                      { backgroundColor: isDark ? '#3A3A3C' : '#DDD' },
-                      i === currentTripIndex && [styles.dotActive, { backgroundColor: ICON_COLORS.trips }],
+                      { backgroundColor: currentTrip.image ? 'rgba(255,255,255,0.3)' : (isDark ? '#3A3A3C' : '#DDD') },
+                      i === currentTripIndex && [styles.dotActive, { backgroundColor: currentTrip.image ? '#fff' : ICON_COLORS.trips }],
                     ]}
                   />
                 ))}
@@ -322,6 +336,8 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
+    position: 'relative',
+    overflow: 'hidden',
   },
   heroTop: {
     flexDirection: 'row',
