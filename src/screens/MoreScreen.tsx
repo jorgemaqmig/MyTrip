@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
 import { tripService } from '../services/tripService';
+import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
@@ -19,7 +20,10 @@ import { StatusBar } from 'expo-status-bar';
 const MoreScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const { activeTrip, setActiveTrip } = useTrip();
+
+  const isOrganizer = activeTrip?.organizers?.includes(user?.uid || '') || user?.uid === activeTrip?.userId;
 
   const handleLogout = async () => {
     try {
@@ -35,7 +39,7 @@ const MoreScreen = () => {
 
     Alert.alert(
       'Eliminar Viaje',
-      '¿Estás seguro de que quieres eliminar este viaje? Esta acción no se puede deshacer.',
+      '¿Estás seguro de que quieres eliminar este viaje para todos? Esta acción no se puede deshacer.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -48,6 +52,31 @@ const MoreScreen = () => {
               navigation.navigate('Start');
             } catch (error) {
               Alert.alert('Error', 'No se pudo eliminar el viaje');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleLeaveTrip = () => {
+    if (!activeTrip?.id || !user?.uid) return;
+
+    Alert.alert(
+      'Abandonar Viaje',
+      '¿Estás seguro de que quieres salir de este viaje? Ya no podrás ver sus detalles.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Abandonar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await tripService.leaveTrip(activeTrip.id!, user.uid);
+              setActiveTrip(null);
+              navigation.navigate('Start');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo abandonar el viaje');
             }
           }
         }
@@ -105,35 +134,51 @@ const MoreScreen = () => {
               color="#34C759"
               onPress={() => navigation.navigate('Participantes')}
             />
-            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-            <MenuItem
-              icon="share-social-outline"
-              title="Invitar Amigos"
-              subtitle="Comparte el código del viaje"
-              color="#FF9500"
-              onPress={() => navigation.navigate('InviteFriends')}
-            />
+            {isOrganizer && (
+              <>
+                <View style={[styles.separator, { backgroundColor: colors.separator }]} />
+                <MenuItem
+                  icon="share-social-outline"
+                  title="Invitar Amigos"
+                  subtitle="Comparte el código del viaje"
+                  color="#FF9500"
+                  onPress={() => navigation.navigate('InviteFriends')}
+                />
+              </>
+            )}
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Configuración</Text>
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <MenuItem
-              icon="options-outline"
-              title="Ajustes del Viaje"
-              subtitle="Nombre, fechas y más"
-              color="#8E8E93"
-              onPress={() => navigation.navigate('TripSettings')}
-            />
-            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
-            <MenuItem
-              icon="trash-outline"
-              title="Eliminar Viaje"
-              subtitle="Esta acción no se puede deshacer"
-              color="#FF3B30"
-              onPress={handleDeleteTrip}
-            />
+            {isOrganizer ? (
+              <>
+                <MenuItem
+                  icon="options-outline"
+                  title="Ajustes del Viaje"
+                  subtitle="Nombre, fechas y más"
+                  color="#8E8E93"
+                  onPress={() => navigation.navigate('TripSettings')}
+                />
+                <View style={[styles.separator, { backgroundColor: colors.separator }]} />
+                <MenuItem
+                  icon="trash-outline"
+                  title="Eliminar Viaje"
+                  subtitle="Esta acción no se puede deshacer"
+                  color="#FF3B30"
+                  onPress={handleDeleteTrip}
+                />
+              </>
+            ) : (
+              <MenuItem
+                icon="log-out-outline"
+                title="Abandonar Viaje"
+                subtitle="Dejarás de formar parte del grupo"
+                color="#FF3B30"
+                onPress={handleLeaveTrip}
+              />
+            )}
           </View>
         </View>
       </ScrollView>

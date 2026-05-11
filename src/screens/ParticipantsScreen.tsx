@@ -13,15 +13,28 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTrip } from '../context/TripContext';
 import { authService } from '../services/authService';
+import { tripService } from '../services/tripService';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+interface ParticipantData {
+  uid: string;
+  displayName?: string;
+  email?: string;
+  photoURL?: string;
+}
+
 const ParticipantsScreen = () => {
   const navigation = useNavigation<any>();
-  const { activeTrip } = useTrip();
+  const { activeTrip, setActiveTrip } = useTrip();
+  const { user } = useAuth();
   const { colors, isDark } = useTheme();
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const currentUserIsOrganizer = activeTrip?.organizers?.includes(user?.uid || '') || activeTrip?.userId === user?.uid;
+  const currentUserIsCreator = user?.uid === activeTrip?.userId;
 
   useEffect(() => {
     const loadParticipants = async () => {
@@ -35,10 +48,17 @@ const ParticipantsScreen = () => {
         const userData = await Promise.all(userDataPromises);
         
         // Combinamos el UID con los datos de Firestore
-        const participantsList = userData.map((data, index) => ({
-          uid: activeTrip.participants![index],
-          ...data
-        })).filter(p => p.displayName); // Filtrar si por algún motivo no hay datos
+        const participantsList = userData
+          .map((data, index) => {
+            if (!data) return null;
+            return {
+              uid: activeTrip.participants![index],
+              displayName: data.displayName,
+              email: data.email,
+              photoURL: data.photoURL,
+            } as ParticipantData;
+          })
+          .filter((p): p is ParticipantData => p !== null && Boolean(p.displayName));
 
         setParticipants(participantsList);
       } catch (error) {
@@ -51,8 +71,34 @@ const ParticipantsScreen = () => {
     loadParticipants();
   }, [activeTrip]);
 
-  const renderParticipant = ({ item }: { item: any }) => {
+  const handlePromote = async (targetUserId: string) => {
+    if (!activeTrip?.id) return;
+    
+    try {
+      await tripService.promoteToOrganizer(activeTrip.id, targetUserId);
+      const updatedOrganizers = [...(activeTrip.organizers || [activeTrip.userId]), targetUserId];
+      setActiveTrip({ ...activeTrip, organizers: updatedOrganizers });
+    } catch (error) {
+      console.error("Error promoting user:", error);
+    }
+  };
+
+  const handleDemote = async (targetUserId: string) => {
+    if (!activeTrip?.id) return;
+    
+    try {
+      await tripService.demoteOrganizer(activeTrip.id, targetUserId);
+      const updatedOrganizers = (activeTrip.organizers || []).filter(id => id !== targetUserId);
+      setActiveTrip({ ...activeTrip, organizers: updatedOrganizers });
+    } catch (error) {
+      console.error("Error demoting user:", error);
+    }
+  };
+
+  const renderParticipant = ({ item }: { item: ParticipantData }) => {
+    const isOrganizer = activeTrip?.organizers?.includes(item.uid) || item.uid === activeTrip?.userId;
     const isCreator = item.uid === activeTrip?.userId;
+    const canPromote = currentUserIsOrganizer && !isOrganizer;
 
     return (
       <View style={[styles.participantItem, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -70,11 +116,33 @@ const ParticipantsScreen = () => {
         <View style={styles.info}>
           <Text style={[styles.name, { color: colors.text }]}>{item.displayName}</Text>
           <Text style={[styles.email, { color: colors.textSecondary }]}>{item.email}</Text>
+          {isOrganizer && (
+            <View style={[styles.badge, { backgroundColor: colors.primary + '15', alignSelf: 'flex-start', marginTop: 4 }]}>
+              <Text style={[styles.badgeText, { color: colors.primary }]}>
+                {isCreator ? 'Creador' : 'Organizador'}
+              </Text>
+            </View>
+          )}
         </View>
-        {isCreator && (
-          <View style={[styles.badge, { backgroundColor: colors.primary + '20' }]}>
-            <Text style={[styles.badgeText, { color: colors.primary }]}>Organizador</Text>
-          </View>
+        
+        {canPromote && (
+          <TouchableOpacity 
+            style={[styles.promoteButton, { backgroundColor: colors.primary }]}
+            onPress={() => handlePromote(item.uid)}
+          >
+            <Ionicons name="star" size={16} color="#fff" />
+            <Text style={styles.promoteButtonText}>Hacer Org.</Text>
+          </TouchableOpacity>
+        )}
+
+        {currentUserIsCreator && isOrganizer && !isCreator && (
+          <TouchableOpacity 
+            style={[styles.promoteButton, { backgroundColor: '#8E8E93' }]}
+            onPress={() => handleDemote(item.uid)}
+          >
+            <Ionicons name="star-outline" size={16} color="#fff" />
+            <Text style={styles.promoteButtonText}>Quitar Org.</Text>
+          </TouchableOpacity>
         )}
       </View>
     );
@@ -147,11 +215,24 @@ const styles = StyleSheet.create({
   name: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   email: { fontSize: 13 },
   badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
-  badgeText: { fontSize: 11, fontWeight: '700' },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  promoteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    gap: 6,
+  },
+  promoteButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });
 
 export default ParticipantsScreen;

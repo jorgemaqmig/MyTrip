@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, Timestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, query, where, Timestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
 export interface TripPoint {
@@ -27,6 +27,7 @@ export interface Trip {
   isPublished?: boolean;
   inviteCode?: string;
   participants?: string[];
+  organizers?: string[]; // Lista de UIDs con permisos de gestión
   createdAt: any;
 }
 
@@ -48,6 +49,7 @@ export const tripService = {
         ...tripData,
         inviteCode: generateInviteCode(),
         participants: [tripData.userId], // El creador es el primer participante
+        organizers: [tripData.userId],   // El creador es el primer organizador
         isPublished: false,
         createdAt: Timestamp.now()
       });
@@ -138,6 +140,64 @@ export const tripService = {
       await deleteDoc(doc(db, 'trips', tripId));
     } catch (error: any) {
       console.error("Error deleting document: ", error);
+      throw error;
+    }
+  },
+  
+  // Abandonar un viaje
+  leaveTrip: async (tripId: string, userId: string) => {
+    try {
+      const tripRef = doc(db, 'trips', tripId);
+      const tripSnap = await getDoc(tripRef);
+      
+      if (!tripSnap.exists()) throw new Error("Viaje no encontrado");
+      
+      const tripData = tripSnap.data() as Trip;
+      const updatedParticipants = (tripData.participants || []).filter(id => id !== userId);
+      
+      await updateDoc(tripRef, {
+        participants: updatedParticipants
+      });
+    } catch (error: any) {
+      console.error("Error leaving trip: ", error);
+      throw error;
+    }
+  },
+
+  // Promocionar a organizador
+  promoteToOrganizer: async (tripId: string, userId: string) => {
+    try {
+      const tripRef = doc(db, 'trips', tripId);
+      const tripSnap = await getDoc(tripRef);
+      if (!tripSnap.exists()) throw new Error("Viaje no encontrado");
+      
+      const tripData = tripSnap.data() as Trip;
+      const updatedOrganizers = [...(tripData.organizers || [tripData.userId]), userId];
+      
+      await updateDoc(tripRef, {
+        organizers: updatedOrganizers
+      });
+    } catch (error: any) {
+      console.error("Error promoting to organizer: ", error);
+      throw error;
+    }
+  },
+
+  // Quitar rol de organizador
+  demoteOrganizer: async (tripId: string, userId: string) => {
+    try {
+      const tripRef = doc(db, 'trips', tripId);
+      const tripSnap = await getDoc(tripRef);
+      if (!tripSnap.exists()) throw new Error("Viaje no encontrado");
+      
+      const tripData = tripSnap.data() as Trip;
+      const updatedOrganizers = (tripData.organizers || []).filter(id => id !== userId);
+      
+      await updateDoc(tripRef, {
+        organizers: updatedOrganizers
+      });
+    } catch (error: any) {
+      console.error("Error demoting organizer: ", error);
       throw error;
     }
   },
