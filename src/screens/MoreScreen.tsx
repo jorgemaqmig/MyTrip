@@ -100,6 +100,14 @@ const MoreScreen = () => {
             <View style={[styles.separator, { backgroundColor: colors.separator }]} />
             <MenuItem
               icon="people-outline"
+              title="Participantes"
+              subtitle="Ver quién está en el viaje"
+              color="#34C759"
+              onPress={() => navigation.navigate('Participantes')}
+            />
+            <View style={[styles.separator, { backgroundColor: colors.separator }]} />
+            <MenuItem
+              icon="share-social-outline"
               title="Invitar Amigos"
               subtitle="Comparte el código del viaje"
               color="#FF9500"

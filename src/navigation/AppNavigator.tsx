@@ -26,6 +26,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import AppearanceScreen from '../screens/AppearanceScreen';
 import TripSettingsScreen from '../screens/TripSettingsScreen';
 import InviteFriendsScreen from '../screens/InviteFriendsScreen';
+import ParticipantsScreen from '../screens/ParticipantsScreen';
 
 import { useTheme } from '../context/ThemeContext';
 
@@ -42,6 +43,7 @@ const MoreStackNavigation = () => {
       <MoreStack.Screen name="Documentos" component={VaultScreen} />
       <MoreStack.Screen name="TripSettings" component={TripSettingsScreen} />
       <MoreStack.Screen name="InviteFriends" component={InviteFriendsScreen} />
+      <MoreStack.Screen name="Participantes" component={ParticipantsScreen} />
     </MoreStack.Navigator>
   );
 };
