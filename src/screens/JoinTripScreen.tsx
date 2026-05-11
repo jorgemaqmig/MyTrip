@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  KeyboardAvoidingView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,23 +18,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
+import { useAuth } from '../context/AuthContext';
+import { tripService } from '../services/tripService';
 
 const JoinTripScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleJoin = async () => {
+    if (!user) return;
+    if (!code.trim()) return;
+
+    setLoading(true);
+    try {
+      await tripService.joinTripByCode(user.uid, code);
+      Alert.alert('¡Éxito!', 'Te has unido al viaje correctamente.', [
+        { text: 'Genial', onPress: () => navigation.navigate('MyTrips') }
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'No se pudo unir al viaje');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flexOne}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.inner}>
-            <TouchableOpacity 
-              style={styles.backButton} 
+            <TouchableOpacity
+              style={styles.backButton}
               onPress={() => navigation.goBack()}
             >
               <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -48,14 +71,14 @@ const JoinTripScreen = () => {
                 <Text style={[styles.label, { color: colors.text }]}>Código del Viaje</Text>
                 <TextInput
                   style={[styles.codeInput, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7', color: colors.text }]}
-                  placeholder="ABC-123"
+                  placeholder="------"
                   placeholderTextColor={colors.textSecondary}
                   autoCapitalize="characters"
                   maxLength={10}
                   value={code}
                   onChangeText={setCode}
                 />
-                <Text style={[styles.helperText, { color: colors.textSecondary }]}>Ejemplo: MAD-7890</Text>
+                <Text style={[styles.helperText, { color: colors.textSecondary }]}>Ejemplo: MADP890</Text>
               </View>
 
               <View style={[styles.infoBox, { backgroundColor: isDark ? '#1C1C1E' : '#F8F9FB' }]}>
@@ -67,17 +90,23 @@ const JoinTripScreen = () => {
             </View>
 
             <View style={styles.footer}>
-              <TouchableOpacity 
-                style={styles.joinButton} 
-                onPress={() => navigation.navigate('MainTabs')}
-                disabled={code.length < 4}
+              <TouchableOpacity
+                style={styles.joinButton}
+                onPress={handleJoin}
+                disabled={code.length < 4 || loading}
               >
                 <LinearGradient
-                  colors={code.length < 4 ? [colors.border, colors.border] : ['#5856D6', '#8E8DFF']}
+                  colors={code.length < 4 || loading ? [colors.border, colors.border] : ['#5856D6', '#8E8DFF']}
                   style={styles.gradientButton}
                 >
-                  <Text style={styles.joinButtonText}>Unirme al Viaje</Text>
-                  <Ionicons name="enter-outline" size={20} color="#fff" />
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Text style={styles.joinButtonText}>Unirme al Viaje</Text>
+                      <Ionicons name="enter-outline" size={20} color="#fff" />
+                    </>
+                  )}
                 </LinearGradient>
               </TouchableOpacity>
             </View>

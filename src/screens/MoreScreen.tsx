@@ -103,7 +103,7 @@ const MoreScreen = () => {
               title="Invitar Amigos"
               subtitle="Comparte el código del viaje"
               color="#FF9500"
-              onPress={() => { }}
+              onPress={() => navigation.navigate('InviteFriends')}
             />
           </View>
         </View>

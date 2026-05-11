@@ -230,6 +230,23 @@ const TripSettingsScreen = () => {
                 />
               </View>
             </View>
+
+            <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.codeHeader}>
+                <Ionicons name="people-outline" size={20} color={colors.primary} />
+                <Text style={[styles.codeTitle, { color: colors.text }]}>Código de Invitación</Text>
+              </View>
+              <View style={styles.codeRow}>
+                <Text style={[styles.codeValue, { color: colors.text }]}>{activeTrip?.inviteCode || '...'}</Text>
+                <TouchableOpacity 
+                  style={[styles.inviteLink, { backgroundColor: colors.primary + '15' }]}
+                  onPress={() => navigation.navigate('InviteFriends')}
+                >
+                  <Text style={[styles.inviteLinkText, { color: colors.primary }]}>Invitar</Text>
+                  <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           <TouchableOpacity 
@@ -425,6 +442,40 @@ const styles = StyleSheet.create({
   toastText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  codeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  codeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  codeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  codeValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  inviteLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    gap: 4,
+  },
+  inviteLinkText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

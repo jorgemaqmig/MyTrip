@@ -25,16 +25,30 @@ export interface Trip {
   status: 'Próximamente' | 'Planeado' | 'En curso' | 'Finalizado';
   image?: string;
   isPublished?: boolean;
+  inviteCode?: string;
+  participants?: string[];
   createdAt: any;
 }
 
 export const tripService = {
   // Crear un nuevo viaje
-  createTrip: async (tripData: Omit<Trip, 'id' | 'createdAt'>) => {
+  createTrip: async (tripData: Omit<Trip, 'id' | 'createdAt' | 'inviteCode' | 'participants'>) => {
     try {
+      // Generar código único de 6 caracteres (mayúsculas y números)
+      const generateInviteCode = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+      };
+
       const docRef = await addDoc(collection(db, 'trips'), {
         ...tripData,
-        isPublished: false, // Por defecto no publicado
+        inviteCode: generateInviteCode(),
+        participants: [tripData.userId], // El creador es el primer participante
+        isPublished: false,
         createdAt: Timestamp.now()
       });
       return docRef.id;
@@ -44,12 +58,13 @@ export const tripService = {
     }
   },
 
-  // Obtener viajes del usuario
+  // Obtener viajes del usuario (donde es creador o participante)
   getUserTrips: async (userId: string) => {
     try {
+      // Buscamos viajes donde el usuario esté en la lista de participantes
       const q = query(
         collection(db, 'trips'), 
-        where('userId', '==', userId)
+        where('participants', 'array-contains', userId)
       );
       
       const querySnapshot = await getDocs(q);
@@ -65,6 +80,43 @@ export const tripService = {
       });
     } catch (error: any) {
       console.error("Error getting documents: ", error);
+      throw error;
+    }
+  },
+
+  // Unirse a un viaje mediante código
+  joinTripByCode: async (userId: string, code: string) => {
+    try {
+      // 1. Buscar el viaje por código
+      const q = query(
+        collection(db, 'trips'),
+        where('inviteCode', '==', code.toUpperCase().trim())
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        throw new Error('Código no válido. No se encontró el viaje.');
+      }
+
+      const tripDoc = querySnapshot.docs[0];
+      const tripData = tripDoc.data() as Trip;
+      const tripId = tripDoc.id;
+
+      // 2. Verificar si el usuario ya está en el viaje
+      if (tripData.participants?.includes(userId)) {
+        return tripId; // Ya está unido
+      }
+
+      // 3. Añadir el usuario a participantes
+      const updatedParticipants = [...(tripData.participants || []), userId];
+      await updateDoc(doc(db, 'trips', tripId), {
+        participants: updatedParticipants
+      });
+
+      return tripId;
+    } catch (error: any) {
+      console.error("Error joining trip: ", error);
       throw error;
     }
   },
