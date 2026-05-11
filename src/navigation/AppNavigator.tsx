@@ -2,7 +2,9 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, View } from 'react-native';
+import { Platform, View, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import MapScreen from '../screens/MapScreen';
 import ItineraryScreen from '../screens/ItineraryScreen';
@@ -22,14 +24,13 @@ import EditEmailScreen from '../screens/EditEmailScreen';
 import SecurityScreen from '../screens/SecurityScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import AppearanceScreen from '../screens/AppearanceScreen';
+import TripSettingsScreen from '../screens/TripSettingsScreen';
 
 import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const MoreStack = createNativeStackNavigator();
-
-import TripSettingsScreen from '../screens/TripSettingsScreen';
 
 // Stack para la pestaña "Más"
 const MoreStackNavigation = () => {
@@ -43,61 +44,75 @@ const MoreStackNavigation = () => {
   );
 };
 
-const MainTabs = () => {
+// Componente de Barra de Navegación Personalizada
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { colors, isDark } = useTheme();
+  const rootNavigation = useNavigation<any>();
 
   return (
-    <Tab.Navigator
-      initialRouteName="Mapa"
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
+    <View style={styles.tabBarContainer}>
+      <LinearGradient
+        colors={isDark ? ['rgba(35, 35, 38, 0.95)', 'rgba(28, 28, 30, 0.85)'] : ['rgba(255, 255, 255, 0.95)', 'rgba(240, 240, 245, 0.85)']}
+        style={[styles.tabBarGradient, { borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)' }]}
+      >
+        {/* Botón Home (Fuera del estado del TabNavigator) */}
+        <Pressable 
+          onPress={() => rootNavigation.navigate('Start')}
+          style={({ pressed }) => [styles.tabButton, { opacity: pressed ? 0.5 : 1 }]}
+        >
+          <Ionicons name="home-outline" size={24} color={colors.textSecondary} />
+        </Pressable>
+
+        {/* Pestañas Reales */}
+        {state.routes.map((route: any, index: number) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
           let iconName: any;
+          if (route.name === 'Mapa') iconName = isFocused ? 'map' : 'map-outline';
+          else if (route.name === 'Itinerario') iconName = isFocused ? 'calendar' : 'calendar-outline';
+          else if (route.name === 'Más') iconName = isFocused ? 'ellipsis-horizontal' : 'ellipsis-horizontal-outline';
 
-          if (route.name === 'Inicio') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Mapa') {
-            iconName = focused ? 'map' : 'map-outline';
-          } else if (route.name === 'Itinerario') {
-            iconName = focused ? 'calendar' : 'calendar-outline';
-          } else if (route.name === 'Más') {
-            iconName = focused ? 'ellipsis-horizontal' : 'ellipsis-horizontal-outline';
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: {
-          backgroundColor: isDark ? 'rgba(28, 28, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-          position: 'absolute',
-          bottom: 35,
-          marginHorizontal: 20,
-          borderRadius: 30,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-          elevation: 0, // Quitamos la elevación rígida de Android para un look más suave
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          borderWidth: 1,
-          borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)',
-        },
-        tabBarShowLabel: false,
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen 
-        name="Inicio" 
-        component={View} 
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-            navigation.navigate('Start');
-          },
+          return (
+            <Pressable
+              key={route.key}
+              onPress={onPress}
+              style={styles.tabButton}
+            >
+              <Ionicons 
+                name={iconName} 
+                size={24} 
+                color={isFocused ? colors.primary : colors.textSecondary} 
+              />
+            </Pressable>
+          );
         })}
-      />
+      </LinearGradient>
+    </View>
+  );
+};
+
+const MainTabs = () => {
+  return (
+    <Tab.Navigator
+      tabBar={props => <CustomTabBar {...props} />}
+      initialRouteName="Mapa"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       <Tab.Screen name="Mapa" component={MapScreen} />
       <Tab.Screen name="Itinerario" component={ItineraryScreen} />
       <Tab.Screen name="Más" component={MoreStackNavigation} />
@@ -128,5 +143,42 @@ const AppNavigator = () => {
     </Stack.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  tabBarContainer: {
+    position: 'absolute',
+    bottom: 35,
+    left: 20,
+    right: 20,
+    height: 60,
+    zIndex: 1000,
+  },
+  tabBarGradient: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    borderRadius: 30,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  tabButton: {
+    flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default AppNavigator;

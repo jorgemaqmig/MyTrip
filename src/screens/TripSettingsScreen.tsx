@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -10,7 +10,8 @@ import {
   Image,
   ScrollView,
   Switch,
-  Platform
+  Platform,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +37,20 @@ const TripSettingsScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectingStartDate, setSelectingStartDate] = useState(true);
+  const [showToast, setShowToast] = useState(false);
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+
+  const triggerToast = () => {
+    setShowToast(true);
+    Animated.sequence([
+      Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.delay(2000),
+      Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
+    ]).start(() => {
+      setShowToast(false);
+      navigation.goBack();
+    });
+  };
 
   const showImageOptions = () => {
     Alert.alert(
@@ -127,8 +142,7 @@ const TripSettingsScreen = () => {
       if (activeTrip?.id) {
         await tripService.updateTrip(activeTrip.id, tripData);
         setActiveTrip({ ...activeTrip, ...tripData });
-        Alert.alert('Éxito', 'Ajustes del viaje actualizados');
-        navigation.goBack();
+        triggerToast();
       }
     } catch (e: any) {
       Alert.alert('Error', 'No se pudieron actualizar los ajustes');
@@ -238,6 +252,19 @@ const TripSettingsScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Toast de éxito */}
+      {showToast && (
+        <Animated.View style={[styles.toastContainer, { opacity: toastOpacity, backgroundColor: isDark ? 'rgba(52, 199, 89, 0.2)' : 'rgba(52, 199, 89, 0.1)' }]}>
+          <LinearGradient
+            colors={isDark ? ['rgba(52, 199, 89, 0.3)', 'rgba(52, 199, 89, 0.1)'] : ['rgba(52, 199, 89, 0.2)', 'rgba(52, 199, 89, 0.05)']}
+            style={styles.toastGradient}
+          >
+            <Ionicons name="checkmark-circle" size={24} color="#34C759" />
+            <Text style={[styles.toastText, { color: isDark ? '#fff' : '#1C1C1E' }]}>Ajustes actualizados</Text>
+          </LinearGradient>
+        </Animated.View>
+      )}
 
       {/* Modal del Calendario */}
       {showCalendar && (
@@ -377,6 +404,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   calendarTitle: { fontSize: 18, fontWeight: '700' },
+  toastContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 199, 89, 0.3)',
+    zIndex: 9999,
+  },
+  toastGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  toastText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 export default TripSettingsScreen;
