@@ -22,39 +22,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let unsubscribeSnapshot: (() => void) | null = null;
-
     const unsubscribeAuth = onAuthStateChanged(auth, async (authenticatedUser) => {
       setUser(authenticatedUser);
       
       if (authenticatedUser) {
-        // Suscribirse a los datos del usuario en Firestore en tiempo real
-        unsubscribeSnapshot = onSnapshot(doc(db, 'users', authenticatedUser.uid), (doc) => {
-          if (doc.exists()) {
-            setUserData(doc.data());
-          }
-        });
-
         await AsyncStorage.setItem('user_session', JSON.stringify({
           uid: authenticatedUser.uid,
           email: authenticatedUser.email
         }));
       } else {
         setUserData(null);
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-        }
         await AsyncStorage.removeItem('user_session');
       }
       
       setLoading(false);
     });
 
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
-    };
+    return () => unsubscribeAuth();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setUserData(null);
+      return;
+    }
+
+    // Suscribirse a los datos del usuario en Firestore en tiempo real
+    const unsubscribeSnapshot = onSnapshot(doc(db, 'users', user.uid), (doc) => {
+      if (doc.exists()) {
+        setUserData(doc.data());
+      }
+    }, (error) => {
+      // Si hay error de permisos al cerrar sesión, lo ignoramos silenciosamente
+      if (error.code !== 'permission-denied') {
+        console.error("Error fetching user data:", error);
+      }
+    });
+
+    return () => unsubscribeSnapshot();
+  }, [user]);
 
   return (
     <AuthContext.Provider value={{ user, userData, loading }}>

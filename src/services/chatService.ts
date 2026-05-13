@@ -34,7 +34,7 @@ export const chatService = {
   },
 
   // Escuchar mensajes en tiempo real
-  subscribeToMessages: (tripId: string, onUpdate: (messages: ChatMessage[]) => void) => {
+  subscribeToMessages: (tripId: string, onUpdate: (messages: ChatMessage[]) => void, onError?: (error: any) => void) => {
     const messagesRef = collection(db, 'trips', tripId, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'desc'));
 
@@ -44,6 +44,9 @@ export const chatService = {
         ...doc.data()
       })) as ChatMessage[];
       onUpdate(messages);
+    }, (error) => {
+      if (onError) onError(error);
+      else console.error("Snapshot error: ", error);
     });
   }
 };

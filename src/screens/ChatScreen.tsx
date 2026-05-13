@@ -12,9 +12,9 @@ import {
   ActivityIndicator,
   Keyboard
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTrip } from '../context/TripContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -23,24 +23,41 @@ import { StatusBar } from 'expo-status-bar';
 
 const ChatScreen = () => {
   const navigation = useNavigation<any>();
-  const { activeTrip } = useTrip();
+  const { activeTrip, markChatAsRead } = useTrip();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      if (activeTrip?.id) {
+        markChatAsRead();
+      }
+    }, [activeTrip?.id])
+  );
+
   useEffect(() => {
-    if (!activeTrip?.id) return;
+    if (!activeTrip?.id || !user) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
 
     const unsubscribe = chatService.subscribeToMessages(activeTrip.id, (newMessages) => {
       setMessages(newMessages);
       setLoading(false);
+    }, (error: any) => {
+      if (error.code !== 'permission-denied') {
+        console.error("Chat error:", error);
+      }
     });
 
     return () => unsubscribe();
-  }, [activeTrip?.id]);
+  }, [activeTrip?.id, user]);
 
   const handleSend = async () => {
     if (!inputText.trim() || !activeTrip?.id || !user) return;
@@ -60,39 +77,64 @@ const ChatScreen = () => {
     }
   };
 
-  const renderMessage = ({ item }: { item: ChatMessage }) => {
+  const renderMessage = ({ item, index }: { item: ChatMessage, index: number }) => {
     const isMe = item.userId === user?.uid;
+    
+    // Lógica para agrupar mensajes (FlatList inverted)
+    const prevMessage = index + 1 < messages.length ? messages[index + 1] : null;
+    const nextMessage = index - 1 >= 0 ? messages[index - 1] : null;
+
+    const isFirstInBlock = !prevMessage || prevMessage.userId !== item.userId;
+    const isLastInBlock = !nextMessage || nextMessage.userId !== item.userId;
 
     return (
-      <View style={[styles.messageWrapper, isMe ? styles.myMessageWrapper : styles.otherMessageWrapper]}>
+      <View style={[
+        styles.messageWrapper, 
+        isMe ? styles.myMessageWrapper : styles.otherMessageWrapper,
+        { marginBottom: isLastInBlock ? 16 : 4 }
+      ]}>
         {!isMe && (
           <View style={styles.avatarContainer}>
-            {item.userPhoto ? (
-              <Image source={{ uri: item.userPhoto }} style={styles.avatar} />
+            {isLastInBlock ? (
+              item.userPhoto ? (
+                <Image source={{ uri: item.userPhoto }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
+                  <Text style={[styles.avatarText, { color: colors.primary }]}>
+                    {item.userName.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )
             ) : (
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '20' }]}>
-                <Text style={[styles.avatarText, { color: colors.primary }]}>
-                  {item.userName.charAt(0).toUpperCase()}
-                </Text>
-              </View>
+              <View style={{ width: 32 }} />
             )}
           </View>
         )}
-        <View style={styles.messageContent}>
-          {!isMe && <Text style={[styles.senderName, { color: colors.textSecondary }]}>{item.userName}</Text>}
+
+        <View style={[styles.messageContent, { alignItems: isMe ? 'flex-end' : 'flex-start' }]}>
+          {(!isMe && isFirstInBlock) && (
+            <Text style={[styles.senderName, { color: colors.textSecondary }]}>{item.userName}</Text>
+          )}
+          
           <View style={[
             styles.bubble,
-            isMe ? { backgroundColor: colors.primary } : { backgroundColor: isDark ? '#2C2C2E' : '#E9E9EB' }
+            isMe ? { backgroundColor: colors.primary } : { backgroundColor: isDark ? '#2C2C2E' : '#E9E9EB' },
+            !isMe && !isFirstInBlock && { borderTopLeftRadius: 5 },
+            isMe && !isFirstInBlock && { borderTopRightRadius: 5 }
           ]}>
             <Text style={[styles.messageText, { color: isMe ? '#fff' : colors.text }]}>
               {item.text}
+              <Text style={styles.timePlaceholder}> {'          '} </Text> 
             </Text>
+            
+            <View style={styles.timeContainerInside}>
+              <Text style={[styles.timeTextInside, { color: isMe ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>
+                {item.createdAt?.toDate ? 
+                  new Date(item.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 
+                  '...'}
+              </Text>
+            </View>
           </View>
-          <Text style={[styles.timeText, { color: colors.textSecondary, textAlign: isMe ? 'right' : 'left' }]}>
-            {item.createdAt?.toDate ? 
-              new Date(item.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 
-              'Enviando...'}
-          </Text>
         </View>
       </View>
     );
@@ -109,7 +151,7 @@ const ChatScreen = () => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      
+
       {/* Header */}
       <View style={styles.headerSection}>
         <View style={styles.headerTop}>
@@ -117,7 +159,7 @@ const ChatScreen = () => {
             <Text style={[styles.title, { color: colors.text }]}>Chat</Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{activeTrip.name}</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }]}
             onPress={() => navigation.navigate('Mapa')}
           >
@@ -126,10 +168,10 @@ const ChatScreen = () => {
         </View>
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.flexOne}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {loading ? (
           <View style={styles.center}>
@@ -148,7 +190,14 @@ const ChatScreen = () => {
         )}
 
         {/* Input Area */}
-        <View style={[styles.inputArea, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
+        <View style={[
+          styles.inputArea,
+          {
+            backgroundColor: colors.background,
+            borderTopColor: colors.border,
+            paddingBottom: Math.max(insets.bottom, 12) + 10 // Subir un poco más como pidió el usuario
+          }
+        ]}>
           <View style={[styles.inputContainer, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]}>
             <TextInput
               style={[styles.input, { color: colors.text }]}
@@ -159,7 +208,7 @@ const ChatScreen = () => {
               multiline
               maxLength={500}
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.sendButton, { backgroundColor: inputText.trim() ? colors.primary : colors.textSecondary + '40' }]}
               onPress={handleSend}
               disabled={!inputText.trim()}
@@ -186,7 +235,7 @@ const styles = StyleSheet.create({
   messageWrapper: {
     flexDirection: 'row',
     marginBottom: 16,
-    maxWidth: '85%',
+    maxWidth: '80%',
   },
   myMessageWrapper: {
     alignSelf: 'flex-end',
@@ -198,19 +247,31 @@ const styles = StyleSheet.create({
   avatarContainer: {
     marginRight: 8,
     alignSelf: 'flex-end',
+    // Eliminado padding manual para que se alinee con la base
   },
   avatar: { width: 32, height: 32, borderRadius: 16 },
   avatarPlaceholder: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   avatarText: { fontSize: 14, fontWeight: 'bold' },
-  messageContent: { flex: 1 },
+  messageContent: {
+    // Quitamos flex: 1 para que no ocupe todo el ancho
+  },
   senderName: { fontSize: 11, fontWeight: '600', marginBottom: 4, marginLeft: 12 },
   bubble: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
+    maxWidth: '100%', // El máximo ya lo da el messageWrapper (80%)
   },
   messageText: { fontSize: 15, lineHeight: 20 },
-  timeText: { fontSize: 10, marginTop: 4, marginHorizontal: 8 },
+  timePlaceholder: { fontSize: 10 },
+  timeContainerInside: {
+    position: 'absolute',
+    right: 8,
+    bottom: 4,
+  },
+  timeTextInside: {
+    fontSize: 10,
+  },
   inputArea: {
     paddingHorizontal: 16,
     paddingVertical: 12,

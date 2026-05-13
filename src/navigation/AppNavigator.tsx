@@ -30,6 +30,7 @@ import ParticipantsScreen from '../screens/ParticipantsScreen';
 import ChatScreen from '../screens/ChatScreen';
 
 import { useTheme } from '../context/ThemeContext';
+import { useTrip } from '../context/TripContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -52,6 +53,7 @@ const MoreStackNavigation = () => {
 // Componente de Barra de Navegación Personalizada
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { colors, isDark } = useTheme();
+  const { hasUnreadMessages } = useTrip();
   const rootNavigation = useNavigation<any>();
   
   // Lógica para ocultar la barra en ciertas pantallas
@@ -101,11 +103,16 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
               onPress={onPress}
               style={styles.tabButton}
             >
-              <Ionicons 
-                name={iconName} 
-                size={24} 
-                color={isFocused ? colors.primary : colors.textSecondary} 
-              />
+              <View>
+                <Ionicons 
+                  name={iconName} 
+                  size={24} 
+                  color={isFocused ? colors.primary : colors.textSecondary} 
+                />
+                {(route.name === 'Chat' && hasUnreadMessages) && (
+                  <View style={[styles.unreadBadge, { backgroundColor: '#FF3B30' }]} />
+                )}
+              </View>
             </Pressable>
           );
         })}
@@ -189,6 +196,16 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: 'white', // Un pequeño borde blanco para que resalte
   },
 });
 
