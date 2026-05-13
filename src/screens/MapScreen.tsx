@@ -201,10 +201,10 @@ const MapScreen = () => {
       </View>
 
       <TouchableOpacity 
-        style={[styles.backButton, { backgroundColor: isDark ? 'rgba(28,28,30,0.95)' : 'rgba(255,255,255,0.95)' }]} 
+        style={[styles.backButton, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }]} 
         onPress={() => navigation.navigate('Start')}
       >
-        <Ionicons name="chevron-back" size={28} color={colors.text} />
+        <Ionicons name="arrow-back" size={22} color={colors.text} />
       </TouchableOpacity>
 
       <Modal visible={modalVisible} transparent={true} animationType="slide">

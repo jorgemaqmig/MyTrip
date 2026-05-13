@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, View, Pressable, StyleSheet, Dimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import MapScreen from '../screens/MapScreen';
@@ -27,6 +27,7 @@ import AppearanceScreen from '../screens/AppearanceScreen';
 import TripSettingsScreen from '../screens/TripSettingsScreen';
 import InviteFriendsScreen from '../screens/InviteFriendsScreen';
 import ParticipantsScreen from '../screens/ParticipantsScreen';
+import ChatScreen from '../screens/ChatScreen';
 
 import { useTheme } from '../context/ThemeContext';
 
@@ -52,6 +53,18 @@ const MoreStackNavigation = () => {
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { colors, isDark } = useTheme();
   const rootNavigation = useNavigation<any>();
+  
+  // Lógica para ocultar la barra en ciertas pantallas
+  const currentRoute = state.routes[state.index];
+  const routeName = getFocusedRouteNameFromRoute(currentRoute) ?? '';
+  
+  // 1. Ocultar si estamos en la pestaña "Chat"
+  if (currentRoute.name === 'Chat') return null;
+  
+  // 2. Ocultar si estamos en una sub-pantalla de "Más" (pero no en el menú principal)
+  if (currentRoute.name === 'Más' && routeName !== '' && routeName !== 'MoreMain') {
+    return null;
+  }
 
   return (
     <View style={styles.tabBarContainer}>
@@ -59,14 +72,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         colors={isDark ? ['rgba(35, 35, 38, 0.95)', 'rgba(28, 28, 30, 0.85)'] : ['rgba(255, 255, 255, 0.95)', 'rgba(240, 240, 245, 0.85)']}
         style={[styles.tabBarGradient, { borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.05)' }]}
       >
-        {/* Botón Home (Fuera del estado del TabNavigator) */}
-        <Pressable 
-          onPress={() => rootNavigation.navigate('Start')}
-          style={({ pressed }) => [styles.tabButton, { opacity: pressed ? 0.5 : 1 }]}
-        >
-          <Ionicons name="home-outline" size={24} color={colors.textSecondary} />
-        </Pressable>
-
         {/* Pestañas Reales */}
         {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
@@ -87,6 +92,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           let iconName: any;
           if (route.name === 'Mapa') iconName = isFocused ? 'map' : 'map-outline';
           else if (route.name === 'Itinerario') iconName = isFocused ? 'calendar' : 'calendar-outline';
+          else if (route.name === 'Chat') iconName = isFocused ? 'chatbubbles' : 'chatbubbles-outline';
           else if (route.name === 'Más') iconName = isFocused ? 'ellipsis-horizontal' : 'ellipsis-horizontal-outline';
 
           return (
@@ -119,6 +125,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Mapa" component={MapScreen} />
       <Tab.Screen name="Itinerario" component={ItineraryScreen} />
+      <Tab.Screen name="Chat" component={ChatScreen} />
       <Tab.Screen name="Más" component={MoreStackNavigation} />
     </Tab.Navigator>
   );

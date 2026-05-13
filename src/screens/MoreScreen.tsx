@@ -104,8 +104,18 @@ const MoreScreen = () => {
         <View style={styles.topSpacer} />
 
         <View style={styles.headerSection}>
-          <Text style={[styles.title, { color: colors.text }]}>Más Opciones</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestión detallada de tu viaje actual</Text>
+          <View style={styles.headerTop}>
+            <View style={styles.flexOne}>
+              <Text style={[styles.title, { color: colors.text }]}>Más Opciones</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestión detallada de tu viaje actual</Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.closeButton, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }]}
+              onPress={() => navigation.navigate('Start')}
+            >
+              <Ionicons name="arrow-back" size={22} color={colors.text} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -191,8 +201,11 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 24 },
   topSpacer: { height: 0, marginBottom: 15 },
   headerSection: { marginBottom: 32 },
+  headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  flexOne: { flex: 1 },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { fontSize: 16 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   section: { marginBottom: 24 },
   sectionLabel: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginBottom: 12, marginLeft: 8 },
   card: { borderRadius: 24, overflow: 'hidden', borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },

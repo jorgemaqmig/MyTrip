@@ -6,6 +6,7 @@ import { useTrip } from '../context/TripContext';
 import { tripService, TripPoint } from '../services/tripService';
 import { NestableScrollContainer, NestableDraggableFlatList, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { useTheme } from '../context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
 const ItineraryScreen = () => {
@@ -219,14 +220,26 @@ const ItineraryScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.separator }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Itinerario</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{activeTrip?.name}</Text>
-      </View>
-
       <NestableScrollContainer style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.topSpacer} />
+        
+        <View style={styles.headerSection}>
+          <View style={styles.headerTop}>
+            <View style={styles.flexOne}>
+              <Text style={[styles.title, { color: colors.text }]}>Itinerario</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{activeTrip?.name}</Text>
+            </View>
+            <TouchableOpacity 
+              style={[styles.closeButton, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }]}
+              onPress={() => navigation.navigate('Start')}
+            >
+              <Ionicons name="arrow-back" size={22} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {points.filter(p => p.dayIndex === 0).length > 0 && 
           renderDaySection("Sin Asignar", "Puntos pendientes", 0, true)
         }
@@ -235,22 +248,21 @@ const ItineraryScreen = () => {
         )}
         <View style={{ height: 120 }} />
       </NestableScrollContainer>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-  },
-  title: { fontSize: 28, fontWeight: '800' },
-  subtitle: { fontSize: 16, marginTop: 4 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingHorizontal: 24, paddingTop: 8 },
+  scrollContent: { padding: 24 },
+  topSpacer: { height: 0, marginBottom: 15 },
+  headerSection: { marginBottom: 32 },
+  headerTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  flexOne: { flex: 1 },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
+  subtitle: { fontSize: 16 },
+  closeButton: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
 
   // --- Cabecera de día centrada ---
   daySeparatorBlock: {
