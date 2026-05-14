@@ -73,7 +73,7 @@ const ExpensesScreen = () => {
     // Escuchar perfiles de participantes para las fotos
     const { collection, query, where, onSnapshot } = require('firebase/firestore');
     const { db } = require('../services/firebaseConfig');
-    
+
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('__name__', 'in', activeTrip.participants));
 
@@ -193,19 +193,19 @@ const ExpensesScreen = () => {
 
   const getChartData = () => {
     if (filteredExpenses.length === 0) return [];
-    
+
     const dataMap: Record<string, { amount: number, photo?: string, label: string }> = {};
-    
+
     if (activeTab === 'Individual') {
       filteredExpenses.forEach(e => {
-        dataMap[e.date] = { 
+        dataMap[e.date] = {
           amount: (dataMap[e.date]?.amount || 0) + e.amount,
           label: e.date
         };
       });
     } else {
       filteredExpenses.forEach(e => {
-        dataMap[e.userId] = { 
+        dataMap[e.userId] = {
           amount: (dataMap[e.userId]?.amount || 0) + e.amount,
           photo: participantPhotos[e.userId] || e.userPhoto, // Prioridad al perfil actual, luego al guardado en el gasto
           label: e.userName
@@ -215,7 +215,7 @@ const ExpensesScreen = () => {
 
     const values = Object.values(dataMap);
     const max = Math.max(...values.map(v => v.amount), 1);
-    
+
     return values.map((v) => ({
       label: v.label,
       photo: v.photo,
@@ -258,7 +258,13 @@ const ExpensesScreen = () => {
           <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Gastos</Text>
-        <TouchableOpacity onPress={openAddModal} style={styles.addButton}>
+        <TouchableOpacity
+          onPress={() => {
+            setFormType(activeTab);
+            openAddModal();
+          }}
+          style={styles.addButton}
+        >
           <LinearGradient colors={[colors.primary, isDark ? '#47a1ff' : '#00C6FF']} style={styles.plusButton}>
             <Ionicons name="add" size={24} color="#fff" />
           </LinearGradient>
@@ -274,7 +280,7 @@ const ExpensesScreen = () => {
               onPress={() => setActiveTab(tab)}
             >
               <Text style={[styles.tabText, activeTab === tab ? { color: colors.text, fontWeight: '700' } : { color: colors.textSecondary }]}>
-                {tab === 'Individual' ? 'Individuales' : 'Colectivos'}
+                {tab === 'Individual' ? 'Personales' : 'Colectivos'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -345,7 +351,7 @@ const ExpensesScreen = () => {
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.form}>
               <View style={[styles.typeSelector, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]}>
-                {(['Individual', 'Colectivo'] as ExpenseType[]).map((type) => (
+                {(['Personal', 'Colectivo'] as ExpenseType[]).map((type) => (
                   <TouchableOpacity key={type} style={[styles.typeOption, formType === type && { backgroundColor: colors.primary }]} onPress={() => setFormType(type)}>
                     <Text style={[styles.typeText, formType === type ? { color: '#fff' } : { color: colors.textSecondary }]}>{type}</Text>
                   </TouchableOpacity>

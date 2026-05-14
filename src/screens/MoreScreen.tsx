@@ -109,7 +109,7 @@ const MoreScreen = () => {
               <Text style={[styles.title, { color: colors.text }]}>Más Opciones</Text>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Gestión detallada de tu viaje actual</Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.closeButton, { backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7' }]}
               onPress={() => navigation.navigate('Start')}
             >
@@ -131,7 +131,7 @@ const MoreScreen = () => {
             <View style={[styles.separator, { backgroundColor: colors.separator }]} />
             <MenuItem
               icon="document-lock-outline"
-              title="Caja Fuerte"
+              title="Documentos"
               subtitle="Tus documentos importantes offline"
               color="#5856D6"
               onPress={() => navigation.navigate('Documentos')}
