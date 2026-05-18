@@ -8,7 +8,18 @@ import {
   GoogleAuthProvider,
   signInWithCredential
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc 
+} from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
@@ -177,6 +188,181 @@ export const authService = {
       const userDoc = await getDoc(doc(db, 'users', uid));
       return userDoc.exists() ? userDoc.data() : null;
     } catch (error) {
+      return null;
+    }
+  },
+
+  // 1. Buscar otros usuarios por email o nombre
+  searchUsers: async (searchTerm: string, currentUid: string) => {
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef);
+      const querySnapshot = await getDocs(q);
+      const results: any[] = [];
+      const normalizedSearch = searchTerm.trim().toLowerCase();
+      
+      if (!normalizedSearch) return [];
+
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        const uid = docSnap.id;
+        
+        if (uid !== currentUid) {
+          const email = (data.email || '').toLowerCase();
+          const displayName = (data.displayName || '').toLowerCase();
+          
+          if (email === normalizedSearch || displayName.includes(normalizedSearch)) {
+            results.push({ uid, ...data });
+          }
+        }
+      });
+      return results;
+    } catch (error: any) {
+      console.error("Error searching users:", error);
+      throw error.message || error;
+    }
+  },
+
+  // 2. Enviar solicitud de amistad
+  sendFriendRequest: async (senderId: string, receiverId: string) => {
+    try {
+      // Verificar si ya existe alguna solicitud o amistad
+      const friendshipsRef = collection(db, 'friendships');
+      const q1 = query(friendshipsRef, where('senderId', '==', senderId), where('receiverId', '==', receiverId));
+      const q2 = query(friendshipsRef, where('senderId', '==', receiverId), where('receiverId', '==', senderId));
+      
+      const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+      
+      if (!snap1.empty || !snap2.empty) {
+        throw new Error("Ya existe una solicitud de amistad o son amigos.");
+      }
+
+      await addDoc(friendshipsRef, {
+        senderId,
+        receiverId,
+        status: 'pending',
+        createdAt: new Date()
+      });
+    } catch (error: any) {
+      console.error("Error sending request:", error);
+      throw error.message || error;
+    }
+  },
+
+  // 3. Obtener solicitudes pendientes recibidas
+  getPendingRequests: async (userId: string) => {
+    try {
+      const friendshipsRef = collection(db, 'friendships');
+      const q = query(friendshipsRef, where('receiverId', '==', userId), where('status', '==', 'pending'));
+      const querySnapshot = await getDocs(q);
+      const requests: any[] = [];
+
+      await Promise.all(
+        querySnapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data();
+          const senderId = data.senderId;
+          const senderData = await authService.getUserData(senderId);
+          if (senderData) {
+            requests.push({
+              friendshipId: docSnap.id,
+              senderId,
+              createdAt: data.createdAt,
+              ...senderData
+            });
+          }
+        })
+      );
+      return requests;
+    } catch (error: any) {
+      console.error("Error getting pending requests:", error);
+      throw error.message || error;
+    }
+  },
+
+  // 4. Aceptar solicitud de amistad
+  acceptFriendRequest: async (friendshipId: string) => {
+    try {
+      const docRef = doc(db, 'friendships', friendshipId);
+      await updateDoc(docRef, {
+        status: 'accepted',
+        updatedAt: new Date()
+      });
+    } catch (error: any) {
+      console.error("Error accepting request:", error);
+      throw error.message || error;
+    }
+  },
+
+  // 5. Rechazar/Cancelar solicitud de amistad o eliminar amigo
+  removeFriendship: async (friendshipId: string) => {
+    try {
+      const docRef = doc(db, 'friendships', friendshipId);
+      await deleteDoc(docRef);
+    } catch (error: any) {
+      console.error("Error removing friendship:", error);
+      throw error.message || error;
+    }
+  },
+
+  // 6. Obtener lista de amigos
+  getFriends: async (userId: string) => {
+    try {
+      const friendshipsRef = collection(db, 'friendships');
+      const q1 = query(friendshipsRef, where('senderId', '==', userId), where('status', '==', 'accepted'));
+      const q2 = query(friendshipsRef, where('receiverId', '==', userId), where('status', '==', 'accepted'));
+      
+      const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+      const friends: any[] = [];
+
+      const processSnap = async (snap: any, isSender: boolean) => {
+        await Promise.all(
+          snap.docs.map(async (docSnap: any) => {
+            const data = docSnap.data();
+            const friendId = isSender ? data.receiverId : data.senderId;
+            const friendData = await authService.getUserData(friendId);
+            if (friendData) {
+              friends.push({
+                friendshipId: docSnap.id,
+                uid: friendId,
+                ...friendData
+              });
+            }
+          })
+        );
+      };
+
+      await Promise.all([
+        processSnap(snap1, true),
+        processSnap(snap2, false)
+      ]);
+
+      return friends;
+    } catch (error: any) {
+      console.error("Error getting friends:", error);
+      throw error.message || error;
+    }
+  },
+
+  // 7. Obtener el estado de la relación con un usuario específico
+  getRelationshipStatus: async (currentUid: string, targetUid: string) => {
+    try {
+      const friendshipsRef = collection(db, 'friendships');
+      const q1 = query(friendshipsRef, where('senderId', '==', currentUid), where('receiverId', '==', targetUid));
+      const q2 = query(friendshipsRef, where('senderId', '==', targetUid), where('receiverId', '==', currentUid));
+      
+      const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+      
+      if (!snap1.empty) {
+        const docSnap = snap1.docs[0];
+        return { friendshipId: docSnap.id, status: docSnap.data().status, isSender: true };
+      }
+      if (!snap2.empty) {
+        const docSnap = snap2.docs[0];
+        return { friendshipId: docSnap.id, status: docSnap.data().status, isSender: false };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting relationship status:", error);
       return null;
     }
   }
