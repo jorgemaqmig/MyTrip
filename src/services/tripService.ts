@@ -256,5 +256,24 @@ export const tripService = {
       console.error("Error deleting point: ", error);
       throw error;
     }
+  },
+
+  // Obtener todos los viajes publicados
+  getPublishedTrips: async () => {
+    try {
+      const q = query(
+        collection(db, 'trips'),
+        where('isPublished', '==', true)
+      );
+      const querySnapshot = await getDocs(q);
+      const trips: Trip[] = [];
+      querySnapshot.forEach((docSnap) => {
+        trips.push({ id: docSnap.id, ...docSnap.data() } as Trip);
+      });
+      return trips;
+    } catch (error: any) {
+      console.error("Error getting published trips: ", error);
+      throw error;
+    }
   }
 };

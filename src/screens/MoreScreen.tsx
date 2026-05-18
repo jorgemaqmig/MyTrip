@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert
+  Alert,
+  Modal,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { authService } from '../services/authService';
 import { tripService } from '../services/tripService';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +26,10 @@ const MoreScreen = () => {
   const { user } = useAuth();
   const { activeTrip, setActiveTrip } = useTrip();
 
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [confirmType, setConfirmType] = useState<'delete' | 'leave'>('delete');
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   const isOrganizer = activeTrip?.organizers?.includes(user?.uid || '') || user?.uid === activeTrip?.userId;
 
   const handleLogout = async () => {
@@ -35,53 +42,33 @@ const MoreScreen = () => {
   };
 
   const handleDeleteTrip = () => {
-    if (!activeTrip?.id) return;
-
-    Alert.alert(
-      'Eliminar Viaje',
-      '¿Estás seguro de que quieres eliminar este viaje para todos? Esta acción no se puede deshacer.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await tripService.deleteTrip(activeTrip.id!);
-              setActiveTrip(null);
-              navigation.navigate('Start');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo eliminar el viaje');
-            }
-          }
-        }
-      ]
-    );
+    setConfirmType('delete');
+    setConfirmModalVisible(true);
   };
 
   const handleLeaveTrip = () => {
-    if (!activeTrip?.id || !user?.uid) return;
+    setConfirmType('leave');
+    setConfirmModalVisible(true);
+  };
 
-    Alert.alert(
-      'Abandonar Viaje',
-      '¿Estás seguro de que quieres salir de este viaje? Ya no podrás ver sus detalles.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Abandonar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await tripService.leaveTrip(activeTrip.id!, user.uid);
-              setActiveTrip(null);
-              navigation.navigate('Start');
-            } catch (error) {
-              Alert.alert('Error', 'No se pudo abandonar el viaje');
-            }
-          }
-        }
-      ]
-    );
+  const handleConfirmAction = async () => {
+    if (!activeTrip?.id) return;
+    setConfirmLoading(true);
+    try {
+      if (confirmType === 'delete') {
+        await tripService.deleteTrip(activeTrip.id!);
+      } else {
+        await tripService.leaveTrip(activeTrip.id!, user?.uid || '');
+      }
+      setActiveTrip(null);
+      setConfirmModalVisible(false);
+      navigation.navigate('Start');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', confirmType === 'delete' ? 'No se pudo eliminar el viaje' : 'No se pudo abandonar el viaje');
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   const MenuItem = ({ icon, title, subtitle, onPress, color }: any) => (
@@ -192,6 +179,58 @@ const MoreScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Modal de Confirmación de Eliminar / Abandonar */}
+      <Modal visible={confirmModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <LinearGradient
+              colors={['#FF3B30', '#D02B20']}
+              style={styles.alertIconWrapper}
+            >
+              <Ionicons 
+                name={confirmType === 'delete' ? "trash-outline" : "log-out-outline"} 
+                size={40} 
+                color="#fff" 
+              />
+            </LinearGradient>
+            
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {confirmType === 'delete' ? '¿Eliminar Viaje?' : '¿Abandonar Viaje?'}
+            </Text>
+            
+            <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+              {confirmType === 'delete' 
+                ? 'Esta acción es permanente y eliminará el viaje con todo su itinerario y datos para todos los participantes. No se puede deshacer.'
+                : 'Esta acción es permanente. Dejarás de formar parte del grupo de viaje y no podrás volver a ver sus detalles.'}
+            </Text>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity 
+                style={[styles.confirmButton, { backgroundColor: '#FF3B30' }]}
+                onPress={handleConfirmAction}
+                disabled={confirmLoading}
+              >
+                {confirmLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.confirmButtonText}>
+                    {confirmType === 'delete' ? 'Eliminar Viaje' : 'Abandonar Viaje'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.cancelButton, { borderColor: colors.border }]}
+                onPress={() => setConfirmModalVisible(false)}
+                disabled={confirmLoading}
+              >
+                <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -215,6 +254,78 @@ const styles = StyleSheet.create({
   menuTitle: { fontSize: 17, fontWeight: '600' },
   menuSubtitle: { fontSize: 13, marginTop: 2 },
   separator: { height: 1, marginLeft: 76 },
+  // Modal de Confirmación
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    width: '90%',
+    maxWidth: 320,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  alertIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 4,
+    shadowColor: '#FF3B30',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  buttonContainer: {
+    width: '100%',
+    gap: 12,
+  },
+  confirmButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cancelButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 export default MoreScreen;

@@ -11,7 +11,8 @@ import {
   ScrollView,
   Switch,
   Platform,
-  Animated
+  Animated,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,14 +43,17 @@ const TripSettingsScreen = () => {
 
   const triggerToast = () => {
     setShowToast(true);
-    Animated.sequence([
-      Animated.timing(toastOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-      Animated.delay(2000),
-      Animated.timing(toastOpacity, { toValue: 0, duration: 300, useNativeDriver: true })
-    ]).start(() => {
-      setShowToast(false);
-      navigation.goBack();
-    });
+    // Auto-dismiss y volver tras 2 segundos si el usuario no pulsa el botón
+    const timer = setTimeout(() => {
+      setShowToast(prev => {
+        if (prev) {
+          navigation.goBack();
+          return false;
+        }
+        return false;
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
   };
 
   const showImageOptions = () => {
@@ -270,18 +274,32 @@ const TripSettingsScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Toast de éxito */}
-      {showToast && (
-        <Animated.View style={[styles.toastContainer, { opacity: toastOpacity, backgroundColor: isDark ? 'rgba(52, 199, 89, 0.2)' : 'rgba(52, 199, 89, 0.1)' }]}>
-          <LinearGradient
-            colors={isDark ? ['rgba(52, 199, 89, 0.3)', 'rgba(52, 199, 89, 0.1)'] : ['rgba(52, 199, 89, 0.2)', 'rgba(52, 199, 89, 0.05)']}
-            style={styles.toastGradient}
-          >
-            <Ionicons name="checkmark-circle" size={24} color="#34C759" />
-            <Text style={[styles.toastText, { color: isDark ? '#fff' : '#1C1C1E' }]}>Ajustes actualizados</Text>
-          </LinearGradient>
-        </Animated.View>
-      )}
+      {/* Modal de Éxito de Guardar */}
+      <Modal visible={showToast} transparent animationType="fade">
+        <View style={styles.successOverlay}>
+          <View style={[styles.successContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <LinearGradient
+              colors={['#34C759', '#30B754']}
+              style={styles.successIconWrapper}
+            >
+              <Ionicons name="checkmark" size={40} color="#fff" />
+            </LinearGradient>
+            <Text style={[styles.successTitle, { color: colors.text }]}>¡Guardado con éxito!</Text>
+            <Text style={[styles.successSubtitle, { color: colors.textSecondary }]}>
+              Los ajustes de tu viaje se han actualizado correctamente.
+            </Text>
+            <TouchableOpacity 
+              style={[styles.successButton, { backgroundColor: colors.primary }]}
+              onPress={() => {
+                setShowToast(false);
+                navigation.goBack();
+              }}
+            >
+              <Text style={styles.successButtonText}>Genial</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal del Calendario */}
       {showCalendar && (
@@ -421,27 +439,61 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   calendarTitle: { fontSize: 18, fontWeight: '700' },
-  toastContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 20,
-    right: 20,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(52, 199, 89, 0.3)',
-    zIndex: 9999,
-  },
-  toastGradient: {
-    flexDirection: 'row',
+  successOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 12,
+    padding: 24,
   },
-  toastText: {
+  successContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+  },
+  successIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    elevation: 4,
+    shadowColor: '#34C759',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  successSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  successButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  successButtonText: {
+    color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   codeHeader: {
     flexDirection: 'row',

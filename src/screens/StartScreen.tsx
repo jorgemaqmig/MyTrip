@@ -155,19 +155,37 @@ const StartScreen = () => {
     }
 
     return (
-      <TouchableOpacity
-        style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-        activeOpacity={0.7}
-        onPress={() => navigation.navigate('CreateTrip')}
-      >
-        <View style={styles.heroTop}>
-          <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.create + '15' }]}>
-            <Ionicons name="add" size={20} color={ICON_COLORS.create} />
+      <View style={{ gap: 16 }}>
+        {/* Card de Crear Viaje (Doble Ancho) */}
+        <TouchableOpacity
+          style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 0 }]}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('CreateTrip')}
+        >
+          <View style={styles.heroTop}>
+            <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.create + '15' }]}>
+              <Ionicons name="add" size={20} color={ICON_COLORS.create} />
+            </View>
           </View>
-        </View>
-        <Text style={[styles.heroTitle, { color: colors.text }]}>Crea tu primer viaje</Text>
-        <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>Planifica tu próxima aventura</Text>
-      </TouchableOpacity>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Crear un viaje</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>Planifica tu próxima aventura</Text>
+        </TouchableOpacity>
+
+        {/* Card de Unirse a un Viaje (Doble Ancho) */}
+        <TouchableOpacity
+          style={[styles.heroCard, { backgroundColor: colors.card, borderColor: colors.border, marginBottom: 0 }]}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('JoinTrip')}
+        >
+          <View style={styles.heroTop}>
+            <View style={[styles.heroIconWrap, { backgroundColor: ICON_COLORS.join + '15' }]}>
+              <Ionicons name="people-outline" size={20} color={ICON_COLORS.join} />
+            </View>
+          </View>
+          <Text style={[styles.heroTitle, { color: colors.text }]}>Unirse a un viaje</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.textSecondary }]}>Introduce el código de tu grupo</Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -194,85 +212,91 @@ const StartScreen = () => {
           <Text style={[styles.brandName, { color: colors.text }]}>My<Text style={styles.brandNameBold}>Trip</Text></Text>
         </View>
 
-        {/* Hero */}
-        {renderHero()}
+        {/* Hero / CTA Section */}
+        <View style={{ marginBottom: 16 }}>
+          {renderHero()}
+        </View>
 
         {/* Grid */}
         <View style={styles.grid}>
           {trips.length > 0 ? (
-            <TouchableOpacity 
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
-              activeOpacity={0.7} 
-              onPress={() => navigation.navigate('CreateTrip')}
-            >
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '15' }]}>
-                <Ionicons name="add-circle-outline" size={22} color={ICON_COLORS.create} />
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Crear Viaje</Text>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Nueva aventura</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('CreateTrip')}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '15' }]}>
+                  <Ionicons name="add-circle-outline" size={22} color={ICON_COLORS.create} />
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Crear Viaje</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Nueva aventura</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('JoinTrip')}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.join + '15' }]}>
+                  <Ionicons name="people-outline" size={22} color={ICON_COLORS.join} />
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Unirse</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Código de viaje</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('Social')}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.social + '15' }]}>
+                  <Ionicons name="chatbubble-outline" size={22} color={ICON_COLORS.social} />
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Social</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Amigos</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('MyTrips')}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '15' }]}>
+                  <Ionicons name="map-outline" size={22} color={ICON_COLORS.trips} />
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Mis Viajes</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>
+                  {`${trips.length} ${trips.length === 1 ? 'viaje' : 'viajes'}`}
+                </Text>
+              </TouchableOpacity>
+            </>
           ) : (
-            <TouchableOpacity 
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
-              activeOpacity={0.7} 
-              onPress={() => navigation.navigate('MyTrips')}
-            >
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '15' }]}>
-                <Ionicons name="map-outline" size={22} color={ICON_COLORS.trips} />
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Mis Viajes</Text>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Tus aventuras</Text>
-            </TouchableOpacity>
-          )}
+            <>
+              <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('Social')}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.social + '15' }]}>
+                  <Ionicons name="chatbubble-outline" size={22} color={ICON_COLORS.social} />
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Social</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Amigos</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
-            activeOpacity={0.7} 
-            onPress={() => navigation.navigate('JoinTrip')}
-          >
-            <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.join + '15' }]}>
-              <Ionicons name="people-outline" size={22} color={ICON_COLORS.join} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Unirse</Text>
-            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Código de viaje</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
-            activeOpacity={0.7} 
-            onPress={() => navigation.navigate('Social')}
-          >
-            <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.social + '15' }]}>
-              <Ionicons name="chatbubble-outline" size={22} color={ICON_COLORS.social} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Social</Text>
-            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Amigos</Text>
-          </TouchableOpacity>
-
-          {trips.length > 0 ? (
-            <TouchableOpacity 
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
-              activeOpacity={0.7} 
-              onPress={() => navigation.navigate('MyTrips')}
-            >
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '15' }]}>
-                <Ionicons name="map-outline" size={22} color={ICON_COLORS.trips} />
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Mis Viajes</Text>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>{trips.length} {trips.length === 1 ? 'viaje' : 'viajes'}</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity 
-              style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
-              activeOpacity={0.7} 
-              onPress={() => navigation.navigate('CreateTrip')}
-            >
-              <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.create + '15' }]}>
-                <Ionicons name="compass-outline" size={22} color={ICON_COLORS.create} />
-              </View>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Explorar</Text>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Descubre</Text>
-            </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} 
+                activeOpacity={0.7} 
+                onPress={() => navigation.navigate('MyTrips')}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: ICON_COLORS.trips + '15' }]}>
+                  <Ionicons name="map-outline" size={22} color={ICON_COLORS.trips} />
+                </View>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>Mis Viajes</Text>
+                <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Tus aventuras</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
 
