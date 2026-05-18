@@ -63,7 +63,9 @@ const RegisterScreen = () => {
       await authService.loginWithGoogle();
       navigation.navigate('Start');
     } catch (error: any) {
-      Alert.alert('Error con Google', error);
+      if (error !== 'USER_CANCELLED') {
+        Alert.alert('Error con Google', error);
+      }
     } finally {
       setLoading(false);
     }

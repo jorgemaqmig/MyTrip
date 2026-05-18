@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebaseConfig';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 // Configuración reforzada
 GoogleSignin.configure({
@@ -56,9 +56,20 @@ export const authService = {
       } catch (e) {}
 
       const response = await GoogleSignin.signIn();
-      const idToken = response.data?.idToken;
+      
+      // Control de cancelación en versiones modernas (donde signIn() resuelve con type: 'cancelled')
+      if (response && response.type === 'cancelled') {
+        throw "USER_CANCELLED";
+      }
 
+      // Obtener el idToken de la estructura moderna o clásica
+      let idToken = response.data?.idToken || (response as any).idToken;
+
+      // Si no hay idToken y la respuesta no indica éxito (en la nueva API), podría ser una cancelación silenciosa
       if (!idToken) {
+        if (response && response.type && response.type !== 'success') {
+          throw "USER_CANCELLED";
+        }
         throw new Error("No se recibió el Token de Google");
       }
 
@@ -75,6 +86,21 @@ export const authService = {
       return userCredential.user;
     } catch (error: any) {
       console.log("Error detallado:", JSON.stringify(error, null, 2));
+      
+      // Si el error ya es el string "USER_CANCELLED" de arriba, volver a lanzarlo
+      if (error === "USER_CANCELLED") {
+        throw error;
+      }
+
+      // Capturar errores de cancelación tradicionales (cuando la promesa rechaza)
+      if (
+        error.code === statusCodes.SIGN_IN_CANCELLED ||
+        error.code === '12501' ||
+        error.message?.includes('cancel') ||
+        error.message?.includes('Cancel')
+      ) {
+        throw "USER_CANCELLED";
+      }
       if (error.code === 'DEVELOPER_ERROR') {
         throw "Error de configuración (DEVELOPER_ERROR). Verifica que el SHA-1 en Firebase sea el de Expo.";
       }
