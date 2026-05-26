@@ -206,9 +206,11 @@ const StartScreen = () => {
         
         {/* Logo Section */}
         <View style={styles.brandSection}>
-          <View style={[styles.logoIcon, { backgroundColor: isDark ? colors.card : '#1A1A1A' }]}>
-            <Ionicons name="airplane" size={32} color="#fff" />
-          </View>
+          <Image 
+            source={require('../../assets/MyTrip-Logo.png')} 
+            style={styles.logoImage} 
+            resizeMode="contain"
+          />
           <Text style={[styles.brandName, { color: colors.text }]}>My<Text style={styles.brandNameBold}>Trip</Text></Text>
         </View>
 
@@ -320,6 +322,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 10,
     marginBottom: 40,
+  },
+  logoImage: {
+    width: 64,
+    height: 64,
+    marginBottom: 12,
   },
   logoIcon: {
     width: 64,

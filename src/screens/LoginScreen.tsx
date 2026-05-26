@@ -11,7 +11,8 @@ import {
   Keyboard,
   SafeAreaView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,12 +67,11 @@ const LoginScreen = () => {
           <View style={styles.inner}>
             {/* Logo y Bienvenida */}
             <View style={styles.header}>
-              <LinearGradient
-                colors={['#007AFF', '#00C6FF']}
-                style={styles.logoCircle}
-              >
-                <Ionicons name="airplane" size={50} color="#fff" />
-              </LinearGradient>
+              <Image 
+                source={require('../../assets/MyTrip-Logo.png')} 
+                style={styles.logoImage} 
+                resizeMode="contain"
+              />
               <Text style={styles.title}>MyTrip</Text>
               <Text style={styles.subtitle}>Tu próxima aventura comienza aquí</Text>
             </View>
@@ -187,6 +187,11 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 50,
+  },
+  logoImage: {
+    width: 110,
+    height: 110,
+    marginBottom: 16,
   },
   logoCircle: {
     width: 100,

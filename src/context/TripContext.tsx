@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { Trip } from '../services/tripService';
 import { db } from '../services/firebaseConfig';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, doc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './AuthContext';
 
@@ -23,6 +23,31 @@ export const TripProvider = ({ children }: { children: ReactNode }) => {
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!activeTrip?.id) return;
+
+    const tripRef = doc(db, 'trips', activeTrip.id);
+    const unsubscribe = onSnapshot(tripRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setActiveTrip(prev => {
+          if (!prev) return null;
+          // Evitar bucle de actualización si los datos clave no cambiaron
+          if (
+            JSON.stringify(prev.dayColors) === JSON.stringify(data.dayColors) &&
+            prev.name === data.name &&
+            prev.status === data.status
+          ) {
+            return prev;
+          }
+          return { ...prev, ...data, id: docSnap.id } as Trip;
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [activeTrip?.id]);
 
   useEffect(() => {
     if (!activeTrip?.id || !user) {

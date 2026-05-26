@@ -28,6 +28,7 @@ export interface Trip {
   inviteCode?: string;
   participants?: string[];
   organizers?: string[]; // Lista de UIDs con permisos de gestión
+  dayColors?: { [dayIndex: string]: string }; // Mapa de índice de día a color hexadecimal
   createdAt: any;
 }
 

@@ -12,7 +12,8 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -90,6 +91,11 @@ const RegisterScreen = () => {
 
               {/* Titular */}
               <View style={styles.header}>
+                <Image 
+                  source={require('../../assets/MyTrip-Logo.png')} 
+                  style={styles.logoImage} 
+                  resizeMode="contain"
+                />
                 <Text style={styles.title}>Crear Cuenta</Text>
                 <Text style={styles.subtitle}>Únete a la comunidad de viajeros</Text>
               </View>
@@ -246,7 +252,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   header: {
-    marginBottom: 40,
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  logoImage: {
+    width: 90,
+    height: 90,
+    marginBottom: 10,
   },
   title: {
     fontSize: 32,
