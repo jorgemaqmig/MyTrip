@@ -52,6 +52,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const [theme, setThemeState] = useState<ThemeType>('system');
+  const [isThemeReady, setIsThemeReady] = useState(false);
 
   // Cargar tema guardado al iniciar
   useEffect(() => {
@@ -61,11 +62,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadTheme = async () => {
     try {
       const savedTheme = await AsyncStorage.getItem('user-theme');
-      if (savedTheme) {
+      if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
         setThemeState(savedTheme as ThemeType);
       }
     } catch (e) {
       console.log('Error loading theme', e);
+    } finally {
+      setIsThemeReady(true);
     }
   };
 
@@ -84,6 +87,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     : theme === 'dark';
 
   const colors = isDark ? Colors.dark : Colors.light;
+
+  if (!isThemeReady) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, colors, isDark, setTheme }}>

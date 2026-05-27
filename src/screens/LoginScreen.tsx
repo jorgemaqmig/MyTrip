@@ -18,9 +18,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
+  const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +61,8 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.flexOne}
@@ -72,20 +76,20 @@ const LoginScreen = () => {
                 style={styles.logoImage} 
                 resizeMode="contain"
               />
-              <Text style={styles.title}>MyTrip</Text>
-              <Text style={styles.subtitle}>Tu próxima aventura comienza aquí</Text>
+              <Text style={[styles.title, { color: colors.text }]}>MyTrip</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Tu próxima aventura comienza aquí</Text>
             </View>
 
             {/* Formulario */}
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Correo Electrónico</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="mail-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Correo Electrónico</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="mail-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="ejemplo@correo.com"
-                    placeholderTextColor="#C7C7CC"
+                    placeholderTextColor={colors.textSecondary}
                     keyboardType="email-address"
                     autoCapitalize="none"
                     value={email}
@@ -95,13 +99,13 @@ const LoginScreen = () => {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Contraseña</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+                <Text style={[styles.label, { color: colors.textSecondary }]}>Contraseña</Text>
+                <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                  <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="••••••••"
-                    placeholderTextColor="#C7C7CC"
+                    placeholderTextColor={colors.textSecondary}
                     secureTextEntry={!showPassword}
                     value={password}
                     onChangeText={setPassword}
@@ -113,12 +117,12 @@ const LoginScreen = () => {
                     <Ionicons 
                       name={showPassword ? "eye-off-outline" : "eye-outline"} 
                       size={20} 
-                      color="#8E8E93" 
+                      color={colors.textSecondary} 
                     />
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={styles.forgotPassword}>
-                  <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+                  <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>¿Olvidaste tu contraseña?</Text>
                 </TouchableOpacity>
               </View>
 
@@ -128,7 +132,7 @@ const LoginScreen = () => {
                 disabled={loading}
               >
                 <LinearGradient
-                  colors={['#007AFF', '#00C6FF']}
+                  colors={isDark ? [colors.primary, '#00C6FF'] : [colors.primary, '#00C6FF']}
                   style={styles.gradientButton}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -142,26 +146,26 @@ const LoginScreen = () => {
               </TouchableOpacity>
 
               <View style={styles.dividerContainer}>
-                <View style={styles.divider} />
-                <Text style={styles.dividerText}>O</Text>
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.separator }]} />
+                <Text style={[styles.dividerText, { color: colors.textSecondary }]}>O</Text>
+                <View style={[styles.divider, { backgroundColor: colors.separator }]} />
               </View>
 
               <TouchableOpacity 
-                style={styles.googleButton}
+                style={[styles.googleButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                 onPress={handleGoogleLogin}
                 disabled={loading}
               >
                 <Ionicons name="logo-google" size={20} color="#EA4335" />
-                <Text style={styles.googleButtonText}>Continuar con Google</Text>
+                <Text style={[styles.googleButtonText, { color: colors.text }]}>Continuar con Google</Text>
               </TouchableOpacity>
             </View>
 
             {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>¿No tienes una cuenta? </Text>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>¿No tienes una cuenta? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.registerLink}>Regístrate</Text>
+                <Text style={[styles.registerLink, { color: colors.primary }]}>Regístrate</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -174,7 +178,6 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   flexOne: {
     flex: 1,
@@ -226,15 +229,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3A3A3C',
     marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F2F7',
     borderRadius: 12,
     paddingHorizontal: 12,
+    borderWidth: 1,
   },
   inputIcon: {
     marginRight: 10,
@@ -243,7 +245,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: '#1C1C1E',
   },
   eyeIcon: {
     padding: 10,
@@ -254,7 +255,6 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 13,
-    color: '#007AFF',
     fontWeight: '500',
   },
   loginButton: {
@@ -285,10 +285,8 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E5EA',
   },
   dividerText: {
-    color: '#8E8E93',
     paddingHorizontal: 15,
     fontSize: 14,
     fontWeight: '500',
@@ -297,9 +295,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     height: 55,
     borderRadius: 12,
     gap: 10,
@@ -312,7 +308,6 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3A3A3C',
   },
   footer: {
     flexDirection: 'row',
@@ -321,11 +316,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 15,
-    color: '#8E8E93',
   },
   registerLink: {
     fontSize: 15,
-    color: '#007AFF',
     fontWeight: 'bold',
   },
 });

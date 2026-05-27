@@ -19,9 +19,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { authService } from '../services/authService';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
+  const { colors, isDark } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,12 +76,13 @@ const RegisterScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.flexOne}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.inner}>
               {/* Botón Volver */}
@@ -86,7 +90,7 @@ const RegisterScreen = () => {
                 style={styles.backButton}
                 onPress={() => navigation.goBack()}
               >
-                <Ionicons name="arrow-back" size={24} color="#1C1C1E" />
+                <Ionicons name="arrow-back" size={24} color={colors.text} />
               </TouchableOpacity>
 
               {/* Titular */}
@@ -96,20 +100,20 @@ const RegisterScreen = () => {
                   style={styles.logoImage} 
                   resizeMode="contain"
                 />
-                <Text style={styles.title}>Crear Cuenta</Text>
-                <Text style={styles.subtitle}>Únete a la comunidad de viajeros</Text>
+                <Text style={[styles.title, { color: colors.text }]}>Crear Cuenta</Text>
+                <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Únete a la comunidad de viajeros</Text>
               </View>
 
               {/* Formulario */}
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nombre Completo</Text>
-                  <View style={styles.inputContainer}>
-                    <Ionicons name="person-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Nombre Completo</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <Ionicons name="person-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="Tu nombre aquí"
-                      placeholderTextColor="#C7C7CC"
+                      placeholderTextColor={colors.textSecondary}
                       value={name}
                       onChangeText={setName}
                     />
@@ -117,13 +121,13 @@ const RegisterScreen = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Correo Electrónico</Text>
-                  <View style={styles.inputContainer}>
-                    <Ionicons name="mail-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Correo Electrónico</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <Ionicons name="mail-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="ejemplo@correo.com"
-                      placeholderTextColor="#C7C7CC"
+                      placeholderTextColor={colors.textSecondary}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={email}
@@ -133,13 +137,13 @@ const RegisterScreen = () => {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Contraseña</Text>
-                  <View style={styles.inputContainer}>
-                    <Ionicons name="lock-closed-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Contraseña</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <Ionicons name="lock-closed-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="Mínimo 6 caracteres"
-                      placeholderTextColor="#C7C7CC"
+                      placeholderTextColor={colors.textSecondary}
                       secureTextEntry={!showPassword}
                       value={password}
                       onChangeText={setPassword}
@@ -151,20 +155,20 @@ const RegisterScreen = () => {
                       <Ionicons 
                         name={showPassword ? "eye-off-outline" : "eye-outline"} 
                         size={20} 
-                        color="#8E8E93" 
+                        color={colors.textSecondary} 
                       />
                     </TouchableOpacity>
                   </View>
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Confirmar Contraseña</Text>
-                  <View style={styles.inputContainer}>
-                    <Ionicons name="shield-checkmark-outline" size={20} color="#8E8E93" style={styles.inputIcon} />
+                  <Text style={[styles.label, { color: colors.textSecondary }]}>Confirmar Contraseña</Text>
+                  <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                    <Ionicons name="shield-checkmark-outline" size={20} color={colors.textSecondary} style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="Repite tu contraseña"
-                      placeholderTextColor="#C7C7CC"
+                      placeholderTextColor={colors.textSecondary}
                       secureTextEntry={!showPassword}
                       value={confirmPassword}
                       onChangeText={setConfirmPassword}
@@ -178,7 +182,7 @@ const RegisterScreen = () => {
                   disabled={loading}
                 >
                   <LinearGradient
-                    colors={['#5856D6', '#8E8DFF']}
+                    colors={isDark ? [colors.primary, '#00C6FF'] : [colors.primary, '#00C6FF']}
                     style={styles.gradientButton}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -192,31 +196,31 @@ const RegisterScreen = () => {
                 </TouchableOpacity>
 
                 <View style={styles.dividerContainer}>
-                  <View style={styles.divider} />
-                  <Text style={styles.dividerText}>O</Text>
-                  <View style={styles.divider} />
+                  <View style={[styles.divider, { backgroundColor: colors.separator }]} />
+                  <Text style={[styles.dividerText, { color: colors.textSecondary }]}>O</Text>
+                  <View style={[styles.divider, { backgroundColor: colors.separator }]} />
                 </View>
 
                 <TouchableOpacity 
-                  style={styles.googleButton}
+                  style={[styles.googleButton, { backgroundColor: colors.card, borderColor: colors.border }]}
                   onPress={handleGoogleRegister}
                   disabled={loading}
                 >
                   <Ionicons name="logo-google" size={20} color="#EA4335" />
-                  <Text style={styles.googleButtonText}>Registrarse con Google</Text>
+                  <Text style={[styles.googleButtonText, { color: colors.text }]}>Registrarse con Google</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.termsText}>
+                <Text style={[styles.termsText, { color: colors.textSecondary }]}>
                   Al registrarte, aceptas nuestros{' '}
-                  <Text style={styles.termsLink}>Términos y Condiciones</Text>
+                  <Text style={[styles.termsLink, { color: colors.primary }]}>Términos y Condiciones</Text>
                 </Text>
               </View>
 
               {/* Link Login */}
               <View style={styles.footer}>
-                <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
+                <Text style={[styles.footerText, { color: colors.textSecondary }]}>¿Ya tienes cuenta? </Text>
                 <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                  <Text style={styles.loginLink}>Entrar</Text>
+                  <Text style={[styles.loginLink, { color: colors.primary }]}>Entrar</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -230,7 +234,6 @@ const RegisterScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   flexOne: {
     flex: 1,
@@ -263,11 +266,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1C1C1E',
   },
   subtitle: {
     fontSize: 16,
-    color: '#8E8E93',
     marginTop: 8,
   },
   form: {
@@ -279,15 +280,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#3A3A3C',
     marginLeft: 4,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F2F2F7',
     borderRadius: 12,
     paddingHorizontal: 12,
+    borderWidth: 1,
   },
   inputIcon: {
     marginRight: 10,
@@ -296,7 +296,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     fontSize: 16,
-    color: '#1C1C1E',
   },
   eyeIcon: {
     padding: 10,
@@ -306,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: '#5856D6',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -329,10 +328,8 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E5E5EA',
   },
   dividerText: {
-    color: '#8E8E93',
     paddingHorizontal: 15,
     fontSize: 14,
     fontWeight: '500',
@@ -341,9 +338,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     height: 55,
     borderRadius: 12,
     gap: 10,
@@ -356,17 +351,14 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#3A3A3C',
   },
   termsText: {
     fontSize: 12,
-    color: '#8E8E93',
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 18,
   },
   termsLink: {
-    color: '#007AFF',
     fontWeight: '600',
   },
   footer: {
@@ -376,11 +368,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 15,
-    color: '#8E8E93',
   },
   loginLink: {
     fontSize: 15,
-    color: '#5856D6',
     fontWeight: 'bold',
   },
 });

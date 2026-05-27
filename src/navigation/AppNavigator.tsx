@@ -139,10 +139,12 @@ const MainTabs = () => {
 };
 
 const AppNavigator = () => {
+  const { colors } = useTheme();
+
   return (
     <Stack.Navigator
       initialRouteName="Login"
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
