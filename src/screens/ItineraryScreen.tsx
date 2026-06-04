@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTrip } from '../context/TripContext';
@@ -10,6 +10,7 @@ import { NestableScrollContainer, NestableDraggableFlatList, ScaleDecorator } fr
 import { useTheme } from '../context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import MapView, { Polyline, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 const PREMIUM_PALETTE = [
   '#3B82F6', // Royal Blue
@@ -24,6 +25,71 @@ const PREMIUM_PALETTE = [
 
 const DEFAULT_COLORS = PREMIUM_PALETTE;
 
+const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+interface TransitStep {
+  instruction: string;
+  mode: string;
+  duration: string;
+  distance: string;
+  transitLineName?: string;
+  transitLineShortName?: string;
+  transitLineColor?: string;
+  transitVehicleType?: string;
+  transitVehicleName?: string;
+  numStops?: number;
+  departureStop?: string;
+  arrivalStop?: string;
+}
+
+interface TransportInfo {
+  mode: string;
+  icon: string;
+  duration: string;
+  distance: string;
+  polyline: { latitude: number; longitude: number }[];
+  steps?: TransitStep[];
+}
+
+// Decodificador de polylines de Google (formato encoded)
+const decodePolyline = (encoded: string): { latitude: number; longitude: number }[] => {
+  const points: { latitude: number; longitude: number }[] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+  while (index < encoded.length) {
+    let b: number;
+    let shift = 0;
+    let result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlat = result & 1 ? ~(result >> 1) : result >> 1;
+    lat += dlat;
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlng = result & 1 ? ~(result >> 1) : result >> 1;
+    lng += dlng;
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+  return points;
+};
+
+const darkMapStyle = [
+  { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
+  { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] },
+  { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] },
+  { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] },
+];
+
 const ItineraryScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip, setActiveTrip } = useTrip();
@@ -33,6 +99,10 @@ const ItineraryScreen = () => {
   const [editDay, setEditDay] = useState<number | null>(null);
   const [localDayPoints, setLocalDayPoints] = useState<TripPoint[]>([]);
   const [dayColors, setDayColors] = useState<{ [key: string]: string }>({});
+  const [expandedRoutes, setExpandedRoutes] = useState<{ [key: string]: boolean }>({});
+  const [routeCache, setRouteCache] = useState<{ [key: string]: TransportInfo[] }>({});
+  const [loadingRoutes, setLoadingRoutes] = useState<{ [key: string]: boolean }>({});
+  const [selectedModes, setSelectedModes] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     if (activeTrip?.dayColors) {
@@ -177,6 +247,80 @@ const ItineraryScreen = () => {
     }
   };
 
+  // --- TRANSPORT DIRECTIONS ---
+  const fetchTransportInfo = async (from: TripPoint, to: TripPoint): Promise<TransportInfo[]> => {
+    const modes = [
+      { apiMode: 'walking', label: 'Andando', icon: 'walk-outline' },
+      { apiMode: 'transit', label: 'Transporte', icon: 'bus-outline' },
+      { apiMode: 'driving', label: 'Coche', icon: 'car-outline' },
+    ];
+    const results: TransportInfo[] = [];
+    for (const m of modes) {
+      try {
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&mode=${m.apiMode}&language=es&key=${GOOGLE_MAPS_API_KEY}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data.routes && data.routes.length > 0) {
+          const leg = data.routes[0].legs[0];
+          const encodedPoly = data.routes[0].overview_polyline?.points || '';
+          const decoded = encodedPoly ? decodePolyline(encodedPoly) : [];
+          
+          const parsedSteps: TransitStep[] = [];
+          if (leg.steps) {
+            for (const s of leg.steps) {
+              const step: TransitStep = {
+                instruction: s.html_instructions ? s.html_instructions.replace(/<[^>]*>/g, '') : '',
+                mode: s.travel_mode || '',
+                duration: s.duration?.text || '',
+                distance: s.distance?.text || '',
+              };
+              if (s.travel_mode === 'TRANSIT' && s.transit_details) {
+                const td = s.transit_details;
+                step.transitLineName = td.line?.name || '';
+                step.transitLineShortName = td.line?.short_name || '';
+                step.transitLineColor = td.line?.color || '';
+                step.transitVehicleType = td.line?.vehicle?.type || '';
+                step.transitVehicleName = td.line?.vehicle?.name || '';
+                step.numStops = td.num_stops || 0;
+                step.departureStop = td.departure_stop?.name || '';
+                step.arrivalStop = td.arrival_stop?.name || '';
+              }
+              parsedSteps.push(step);
+            }
+          }
+
+          results.push({ 
+            mode: m.label, 
+            icon: m.icon, 
+            duration: leg.duration.text, 
+            distance: leg.distance.text, 
+            polyline: decoded,
+            steps: parsedSteps
+          });
+        } else {
+          results.push({ mode: m.label, icon: m.icon, duration: 'No disponible', distance: '-', polyline: [] });
+        }
+      } catch (e) {
+        results.push({ mode: m.label, icon: m.icon, duration: 'Error', distance: '-', polyline: [] });
+      }
+    }
+    return results;
+  };
+
+  const handleToggleRoute = async (from: TripPoint, to: TripPoint) => {
+    const key = `${from.id}_${to.id}`;
+    if (expandedRoutes[key]) {
+      setExpandedRoutes(prev => ({ ...prev, [key]: false }));
+      return;
+    }
+    setExpandedRoutes(prev => ({ ...prev, [key]: true }));
+    if (routeCache[key]) return;
+    setLoadingRoutes(prev => ({ ...prev, [key]: true }));
+    const info = await fetchTransportInfo(from, to);
+    setRouteCache(prev => ({ ...prev, [key]: info }));
+    setLoadingRoutes(prev => ({ ...prev, [key]: false }));
+  };
+
   // --- RENDERERS ---
   const renderNormalPoint = (point: TripPoint, index: number, total: number) => {
     const dayColor = getDayColor(point.dayIndex);
@@ -184,11 +328,14 @@ const ItineraryScreen = () => {
       <View key={point.id} style={styles.pointContainer}>
         {/* Timeline Left Column */}
         <View style={styles.timelineLeft}>
+          {index > 0 && (
+            <View style={[styles.timelineLineUp, { backgroundColor: dayColor + '40' }]} />
+          )}
           <View style={[styles.pointDotCircle, { borderColor: dayColor, backgroundColor: colors.background }]}>
             <View style={[styles.pointDotInner, { backgroundColor: dayColor }]} />
           </View>
           {index < total - 1 && (
-            <View style={[styles.timelineVerticalLine, { backgroundColor: dayColor + '40' }]} />
+            <View style={[styles.timelineLineDown, { backgroundColor: dayColor + '40' }]} />
           )}
         </View>
         
@@ -201,6 +348,200 @@ const ItineraryScreen = () => {
               <Text style={[styles.pointAddress, { color: colors.textSecondary }]} numberOfLines={1}>{point.locationName}</Text>
             </View>
           </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderTransportConnector = (fromPoint: TripPoint, toPoint: TripPoint, dayColor: string) => {
+    const routeKey = `${fromPoint.id}_${toPoint.id}`;
+    const isExpanded = expandedRoutes[routeKey] || false;
+    const isLoading = loadingRoutes[routeKey] || false;
+    const info = routeCache[routeKey];
+    const selectedIdx = selectedModes[routeKey] ?? 0;
+    const selectedRoute = info?.[selectedIdx];
+    const steps = selectedRoute?.steps || [];
+
+    const midLat = (fromPoint.latitude + toPoint.latitude) / 2;
+    const midLng = (fromPoint.longitude + toPoint.longitude) / 2;
+    const deltaLat = Math.abs(fromPoint.latitude - toPoint.latitude) * 1.6 || 0.01;
+    const deltaLng = Math.abs(fromPoint.longitude - toPoint.longitude) * 1.6 || 0.01;
+
+    return (
+      <View key={`route-${routeKey}`} style={styles.transportRow}>
+        {/* Timeline column */}
+        <View style={styles.transportTimelineCol}>
+          <View style={[styles.transportFullLine, { backgroundColor: dayColor + '40' }]} />
+          <TouchableOpacity
+            style={[styles.transportBtn, { backgroundColor: isDark ? colors.card : '#FFFFFF', borderColor: dayColor + '50' }]}
+            onPress={() => handleToggleRoute(fromPoint, toPoint)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isExpanded ? 'chevron-up' : 'navigate-outline'}
+              size={12}
+              color={dayColor}
+            />
+          </TouchableOpacity>
+        </View>
+        {/* Content column */}
+        <View style={styles.transportContentCol}>
+          {isExpanded && (
+            <View style={[styles.transportCard, { backgroundColor: isDark ? '#1C1C1E' : '#F9F9FB', borderColor: colors.border }]}>
+              {isLoading ? (
+                <View style={styles.transportLoadingWrap}>
+                  <ActivityIndicator size="small" color={dayColor} />
+                  <Text style={[styles.transportLoadingText, { color: colors.textSecondary }]}>Calculando rutas...</Text>
+                </View>
+              ) : info ? (
+                <>
+                  {/* Mini Map */}
+                  <View style={styles.miniMapContainer}>
+                    <MapView
+                      provider={PROVIDER_GOOGLE}
+                      style={styles.miniMap}
+                      customMapStyle={isDark ? darkMapStyle : []}
+                      initialRegion={{
+                        latitude: midLat,
+                        longitude: midLng,
+                        latitudeDelta: deltaLat,
+                        longitudeDelta: deltaLng,
+                      }}
+                      scrollEnabled={false}
+                      zoomEnabled={false}
+                      rotateEnabled={false}
+                      pitchEnabled={false}
+                      toolbarEnabled={false}
+                      mapPadding={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                    >
+                      {/* Route polyline */}
+                      {selectedRoute && selectedRoute.polyline.length > 0 && (
+                        <Polyline
+                          coordinates={selectedRoute.polyline}
+                          strokeColor={dayColor}
+                          strokeWidth={3}
+                        />
+                      )}
+                      {/* Origin marker */}
+                      <Marker
+                        coordinate={{ latitude: fromPoint.latitude, longitude: fromPoint.longitude }}
+                        pinColor={dayColor}
+                      />
+                      {/* Destination marker */}
+                      <Marker
+                        coordinate={{ latitude: toPoint.latitude, longitude: toPoint.longitude }}
+                        pinColor={dayColor}
+                      />
+                    </MapView>
+                    {/* Mode label overlay */}
+                    <View style={[styles.miniMapBadge, { backgroundColor: dayColor }]}>
+                      <Ionicons name={(selectedRoute?.icon || 'walk-outline') as any} size={10} color="#FFF" />
+                      <Text style={styles.miniMapBadgeText}>{selectedRoute?.duration || ''}</Text>
+                    </View>
+                  </View>
+                  {/* Transport mode rows */}
+                  {info.map((route, idx) => {
+                    const isSelected = idx === selectedIdx;
+                    return (
+                      <TouchableOpacity
+                        key={idx}
+                        style={[
+                          styles.transportInfoRow,
+                          isSelected && { backgroundColor: dayColor + '12' },
+                          idx < info.length - 1 && { borderBottomColor: colors.separator, borderBottomWidth: StyleSheet.hairlineWidth },
+                        ]}
+                        activeOpacity={0.7}
+                        onPress={() => setSelectedModes(prev => ({ ...prev, [routeKey]: idx }))}
+                      >
+                        <View style={[styles.transportIconCircle, { backgroundColor: isSelected ? dayColor + '25' : dayColor + '10' }]}>
+                          <Ionicons name={route.icon as any} size={14} color={dayColor} />
+                        </View>
+                        <Text style={[styles.transportModeName, { color: colors.text, fontWeight: isSelected ? '700' : '500' }]}>{route.mode}</Text>
+                        <View style={styles.transportMetrics}>
+                          <Text style={[styles.transportDuration, { color: isSelected ? dayColor : colors.text }]}>{route.duration}</Text>
+                          <Text style={[styles.transportDistance, { color: colors.textSecondary }]}>{route.distance}</Text>
+                        </View>
+                        {isSelected && (
+                          <View style={[styles.transportSelectedDot, { backgroundColor: dayColor }]} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  {/* Detalle del trayecto paso a paso */}
+                  {steps.length > 0 && (
+                    <View style={[styles.stepsContainer, { borderTopColor: colors.border, borderTopWidth: 1 }]}>
+                      <Text style={[styles.stepsTitle, { color: colors.textSecondary }]}>Detalles de la ruta</Text>
+                      {steps.map((step, sIdx) => {
+                        let stepIcon = 'walk-outline';
+                        let stepColor = dayColor;
+                        if (step.mode === 'TRANSIT') {
+                          if (step.transitVehicleType === 'SUBWAY') {
+                            stepIcon = 'subway-outline';
+                          } else if (step.transitVehicleType === 'BUS') {
+                            stepIcon = 'bus-outline';
+                          } else if (step.transitVehicleType === 'HEAVY_RAIL') {
+                            stepIcon = 'train-outline';
+                          } else {
+                            stepIcon = 'bus-outline';
+                          }
+                          if (step.transitLineColor) {
+                            stepColor = step.transitLineColor;
+                          }
+                        } else if (step.mode === 'DRIVING') {
+                          stepIcon = 'car-outline';
+                        }
+
+                        return (
+                          <View key={sIdx} style={styles.stepRow}>
+                            {/* Step Timeline Column */}
+                            <View style={styles.stepTimelineCol}>
+                              <View style={[styles.stepDot, { backgroundColor: stepColor }]} />
+                              {sIdx < steps.length - 1 && (
+                                <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
+                              )}
+                            </View>
+                            {/* Step Info Column */}
+                            <View style={styles.stepInfoCol}>
+                              <View style={styles.stepHeaderRow}>
+                                <Ionicons name={stepIcon as any} size={13} color={stepColor} style={{ marginRight: 6 }} />
+                                {step.mode === 'TRANSIT' && step.transitLineShortName ? (
+                                  <View style={[styles.transitBadge, { backgroundColor: stepColor }]}>
+                                    <Text style={styles.transitBadgeText}>{step.transitLineShortName}</Text>
+                                  </View>
+                                ) : null}
+                                <Text style={[styles.stepDuration, { color: colors.textSecondary }]}>
+                                  {step.duration} ({step.distance})
+                                </Text>
+                              </View>
+                              
+                              <Text style={[styles.stepInstruction, { color: colors.text }]}>
+                                {step.instruction}
+                              </Text>
+
+                              {step.mode === 'TRANSIT' && (
+                                <View style={[styles.transitDetailsCard, { backgroundColor: isDark ? '#2C2C2E' : '#EFEFF4' }]}>
+                                  <Text style={[styles.transitDetailText, { color: colors.text }]}>
+                                    <Text style={{ fontWeight: 'bold' }}>{step.transitVehicleName || 'Transporte'} {step.transitLineName || ''}</Text>
+                                  </Text>
+                                  <Text style={[styles.transitDetailSub, { color: colors.textSecondary }]}>
+                                    Subir: {step.departureStop}
+                                  </Text>
+                                  <Text style={[styles.transitDetailSub, { color: colors.textSecondary }]}>
+                                    Bajar: {step.arrivalStop} ({step.numStops} {step.numStops === 1 ? 'parada' : 'paradas'})
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </>
+              ) : null}
+            </View>
+          )}
         </View>
       </View>
     );
@@ -335,7 +676,12 @@ const ItineraryScreen = () => {
                 onDragEnd={({ data }) => setLocalDayPoints(data)}
               />
             ) : (
-              dayPoints.map((p, idx) => renderNormalPoint(p, idx, dayPoints.length))
+              dayPoints.map((p, idx) => (
+                <React.Fragment key={p.id}>
+                  {renderNormalPoint(p, idx, dayPoints.length)}
+                  {idx < dayPoints.length - 1 && renderTransportConnector(p, dayPoints[idx + 1], getDayColor(p.dayIndex))}
+                </React.Fragment>
+              ))
             )}
           </View>
         </View>
@@ -512,7 +858,7 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 18,
+    marginTop: 24,
     zIndex: 2,
   },
   pointDotInner: {
@@ -522,8 +868,8 @@ const styles = StyleSheet.create({
   },
   timelineVerticalLine: {
     position: 'absolute',
-    top: 30,
-    bottom: -15, // Cruza hacia el siguiente punto
+    top: 38,
+    bottom: -15,
     width: 2,
     left: 15,
     zIndex: 1,
@@ -535,7 +881,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     paddingHorizontal: 16,
     paddingVertical: 14,
-    marginBottom: 12,
+    marginBottom: 6,
   },
   pointInfo: { flex: 1 },
   pointName: { fontSize: 15, fontWeight: '600' },
@@ -546,6 +892,143 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   pointAddress: { fontSize: 12 },
+
+  // --- Timeline connectors ---
+  timelineLineUp: {
+    position: 'absolute',
+    top: 0,
+    width: 2,
+    height: 24,
+    left: 15,
+    zIndex: 1,
+  },
+  timelineLineDown: {
+    position: 'absolute',
+    top: 38,
+    bottom: 0,
+    width: 2,
+    left: 15,
+    zIndex: 1,
+  },
+
+  // --- Transport connector ---
+  transportRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  transportTimelineCol: {
+    width: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginRight: 4,
+  },
+  transportFullLine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 2,
+    left: 15,
+    zIndex: 1,
+  },
+  transportBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    zIndex: 2,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 2 },
+      android: { elevation: 2 },
+    }),
+  },
+  transportContentCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  transportCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginVertical: 2,
+  },
+  transportLoadingWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+  },
+  transportLoadingText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  transportInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 10,
+  },
+  transportIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  transportModeName: {
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  transportMetrics: {
+    alignItems: 'flex-end',
+  },
+  transportDuration: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  transportDistance: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  transportSelectedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: 6,
+  },
+
+  // --- Mini Map ---
+  miniMapContainer: {
+    height: 150,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  miniMap: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  miniMapBadge: {
+    position: 'absolute',
+    bottom: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    gap: 4,
+  },
+  miniMapBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
   // --- Modo edición ---
   draggableRow: { 
@@ -573,6 +1056,81 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  // --- Paso a paso de ruta ---
+  stepsContainer: {
+    padding: 12,
+  },
+  stepsTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  stepRow: {
+    flexDirection: 'row',
+  },
+  stepTimelineCol: {
+    width: 16,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  stepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 4,
+    zIndex: 2,
+  },
+  stepLine: {
+    position: 'absolute',
+    top: 12,
+    bottom: -8,
+    width: 1.5,
+    left: 7.25,
+    zIndex: 1,
+  },
+  stepInfoCol: {
+    flex: 1,
+    paddingLeft: 8,
+    paddingBottom: 16,
+  },
+  stepHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  transitBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  transitBadgeText: {
+    color: '#FFF',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  stepDuration: {
+    fontSize: 11,
+  },
+  stepInstruction: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  transitDetailsCard: {
+    marginTop: 8,
+    padding: 8,
+    borderRadius: 8,
+  },
+  transitDetailText: {
+    fontSize: 12,
+  },
+  transitDetailSub: {
+    fontSize: 11,
+    marginTop: 2,
   },
 
   // --- Estado vacío ---
