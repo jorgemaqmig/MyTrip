@@ -20,6 +20,7 @@ import { authService } from '../services/authService';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de edición de perfil
 const EditProfileScreen = () => {
   const navigation = useNavigation<any>();
   const { user, userData } = useAuth();
@@ -29,6 +30,7 @@ const EditProfileScreen = () => {
   const [imageUri, setImageUri] = useState<string | null>(userData?.photoURL || null);
   const [loading, setLoading] = useState(false);
 
+  // Muestra opciones para cambiar la foto de perfil
   const showImageOptions = () => {
     Alert.alert(
       'Cambiar foto de perfil',
@@ -41,6 +43,7 @@ const EditProfileScreen = () => {
     );
   };
 
+  // Toma una foto usando la cámara
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -62,6 +65,7 @@ const EditProfileScreen = () => {
     }
   };
 
+  // Selecciona una imagen de la galería
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -83,6 +87,7 @@ const EditProfileScreen = () => {
     }
   };
 
+  // Guarda los cambios en el perfil
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert('Error', 'El nombre no puede estar vacío');
@@ -106,6 +111,7 @@ const EditProfileScreen = () => {
     }
   };
 
+  // Renderiza la pantalla de edición de perfil
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -181,6 +187,7 @@ const EditProfileScreen = () => {
   );
 };
 
+// Estilos para la pantalla de edición de perfil
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 24 },

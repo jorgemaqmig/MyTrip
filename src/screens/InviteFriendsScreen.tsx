@@ -18,6 +18,7 @@ import { useTrip } from '../context/TripContext';
 import { tripService } from '../services/tripService';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla para invitar amigos al viaje mediante un código de invitación
 const InviteFriendsScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -63,6 +64,7 @@ const InviteFriendsScreen = () => {
     }
   };
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -121,6 +123,7 @@ const InviteFriendsScreen = () => {
   );
 };
 
+// Estilos para la pantalla de invitación
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {

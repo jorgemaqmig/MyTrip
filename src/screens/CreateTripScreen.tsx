@@ -25,6 +25,7 @@ import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplet
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de creación de viaje
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 LocaleConfig.locales['es'] = {
@@ -60,7 +61,8 @@ const CreateTripScreen = () => {
       Alert.alert('Error', 'Debes iniciar sesión para crear un viaje');
       return;
     }
-
+    
+    // Validación básica del formulario
     setCreating(true);
     try {
       const tripData = {
@@ -89,6 +91,7 @@ const CreateTripScreen = () => {
     }
   };
 
+  // Maneja la selección de fechas en el calendario
   const handleDayPress = (day: any) => {
     if (selectingStartDate) {
       setStartDate(day.dateString);
@@ -273,6 +276,7 @@ const CreateTripScreen = () => {
     </View>
   );
 
+  // Renderiza la pantalla de creación de viaje
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -333,6 +337,7 @@ const CreateTripScreen = () => {
   );
 };
 
+// Estilos para la pantalla de creación de viaje
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flexOne: { flex: 1 },

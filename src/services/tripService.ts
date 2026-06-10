@@ -27,8 +27,8 @@ export interface Trip {
   isPublished?: boolean;
   inviteCode?: string;
   participants?: string[];
-  organizers?: string[]; // Lista de UIDs con permisos de gestión
-  dayColors?: { [dayIndex: string]: string }; // Mapa de índice de día a color hexadecimal
+  organizers?: string[]; 
+  dayColors?: { [dayIndex: string]: string }; 
   createdAt: any;
 }
 
@@ -49,8 +49,8 @@ export const tripService = {
       const docRef = await addDoc(collection(db, 'trips'), {
         ...tripData,
         inviteCode: generateInviteCode(),
-        participants: [tripData.userId], // El creador es el primer participante
-        organizers: [tripData.userId],   // El creador es el primer organizador
+        participants: [tripData.userId], 
+        organizers: [tripData.userId],   
         isPublished: false,
         createdAt: Timestamp.now()
       });
@@ -165,7 +165,7 @@ export const tripService = {
     }
   },
 
-  // Promocionar a organizador
+  // Cambiar rol a organizador
   promoteToOrganizer: async (tripId: string, userId: string) => {
     try {
       const tripRef = doc(db, 'trips', tripId);
@@ -226,7 +226,6 @@ export const tripService = {
       querySnapshot.forEach((docSnap) => {
         points.push({ id: docSnap.id, ...docSnap.data() } as TripPoint);
       });
-      // Sort by dayIndex then order
       return points.sort((a, b) => {
         if (a.dayIndex !== b.dayIndex) return a.dayIndex - b.dayIndex;
         return a.order - b.order;

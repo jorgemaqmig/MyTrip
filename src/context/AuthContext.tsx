@@ -6,10 +6,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthContextType {
   user: User | null;
-  userData: any | null; // Datos adicionales de Firestore
+  userData: any | null; 
   loading: boolean;
 }
 
+// Contexto para la autenticación y datos del usuario
 const AuthContext = createContext<AuthContextType>({
   user: null,
   userData: null,
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userData, setUserData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Escuchar cambios en la autenticación y cargar datos del usuario
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (authenticatedUser) => {
       setUser(authenticatedUser);
@@ -53,7 +55,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserData(doc.data());
       }
     }, (error) => {
-      // Si hay error de permisos al cerrar sesión, lo ignoramos silenciosamente
       if (error.code !== 'permission-denied') {
         console.error("Error fetching user data:", error);
       }

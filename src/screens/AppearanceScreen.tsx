@@ -16,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
 
+// Pantalla de Apariencia
 const AppearanceScreen = () => {
   const navigation = useNavigation<any>();
   const { theme, setTheme, colors, isDark } = useTheme();
@@ -23,6 +24,7 @@ const AppearanceScreen = () => {
   const ThemeOption = ({ id, title, icon, color1, color2 }: any) => {
     const isSelected = theme === id;
     
+    // Renderiza cada opción de tema
     return (
       <TouchableOpacity 
         style={[
@@ -61,7 +63,8 @@ const AppearanceScreen = () => {
       </TouchableOpacity>
     );
   };
-
+  
+  // Renderiza la pantalla de apariencia
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -77,6 +80,7 @@ const AppearanceScreen = () => {
           </Text>
         </View>
 
+        {/* Opciones de temas */}
         <View style={styles.themesGrid}>
           <ThemeOption 
             id="light"
@@ -117,6 +121,7 @@ const AppearanceScreen = () => {
   );
 };
 
+// Estilos para la pantalla de apariencia
 const styles = StyleSheet.create({
   container: {
     flex: 1,

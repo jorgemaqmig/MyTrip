@@ -29,13 +29,14 @@ import { Calendar } from 'react-native-calendars';
 
 const { width } = Dimensions.get('window');
 
+// Pantalla de Social
 const SocialScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
   const { user } = useAuth();
   const { setActiveTrip } = useTrip();
 
-  const [activeTab, setActiveTab] = useState('explorar'); // 'amigos' o 'explorar'
+  const [activeTab, setActiveTab] = useState('explorar'); 
   const [publishedTrips, setPublishedTrips] = useState<any[]>([]);
   const [ownersMap, setOwnersMap] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
@@ -51,7 +52,7 @@ const SocialScreen = () => {
   const [selectingStartDate, setSelectingStartDate] = useState(true);
   const [cloning, setCloning] = useState(false);
 
-  // Modal Reutilizable Estilo Premium de la App
+  // Modal Reutilizable Estilo de la App
   const [premiumAlert, setPremiumAlert] = useState<{
     visible: boolean;
     type: 'success' | 'warning' | 'info';
@@ -72,6 +73,7 @@ const SocialScreen = () => {
   });
   const [alertLoading, setAlertLoading] = useState(false);
 
+  // Funciones para mostrar y manejar el modal de alerta
   const showPremiumAlert = (config: {
     type: 'success' | 'warning' | 'info';
     icon: string;
@@ -91,6 +93,7 @@ const SocialScreen = () => {
     setPremiumAlert(prev => ({ ...prev, visible: false }));
   };
 
+  // Manejo de la confirmación del modal con soporte para acciones asíncronas
   const handlePremiumConfirm = async () => {
     setAlertLoading(true);
     try {
@@ -153,6 +156,7 @@ const SocialScreen = () => {
     }
   };
 
+  // Función para manejar la búsqueda global de usuarios
   const handleGlobalSearch = async () => {
     if (!searchQuery.trim() || !user) return;
     setSearchLoading(true);
@@ -180,6 +184,7 @@ const SocialScreen = () => {
     }
   };
 
+  // Función para enviar solicitud de amistad
   const handleSendFriendRequest = async (targetUid: string) => {
     if (!user) return;
     try {
@@ -214,6 +219,7 @@ const SocialScreen = () => {
     }
   };
 
+  // Funciones para aceptar/rechazar solicitudes y eliminar amigos
   const handleAcceptRequest = async (friendshipId: string) => {
     try {
       await authService.acceptFriendRequest(friendshipId);
@@ -278,6 +284,7 @@ const SocialScreen = () => {
     }
   };
 
+  // Función para eliminar un amigo con confirmación
   const handleDeleteFriend = (friendshipId: string, friendName: string) => {
     showPremiumAlert({
       type: 'warning',

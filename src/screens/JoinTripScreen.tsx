@@ -21,6 +21,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../context/AuthContext';
 import { tripService } from '../services/tripService';
 
+// Pantalla para unirse a un viaje mediante un código de invitación
 const JoinTripScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -45,6 +46,7 @@ const JoinTripScreen = () => {
     }
   };
 
+  // Renderizar la pantalla con un campo para ingresar el código de invitación y un botón para unirse al viaje
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -117,6 +119,7 @@ const JoinTripScreen = () => {
   );
 };
 
+// Estilos para la pantalla de unirse a un viaje, incluyendo diseño de tarjetas, botones y campos de entrada
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flexOne: { flex: 1 },

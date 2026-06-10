@@ -25,6 +25,7 @@ import { tripService } from '../services/tripService';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Configuración de los ajustes del viaje
 const TripSettingsScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip, setActiveTrip } = useTrip();
@@ -43,7 +44,6 @@ const TripSettingsScreen = () => {
 
   const triggerToast = () => {
     setShowToast(true);
-    // Auto-dismiss y volver tras 2 segundos si el usuario no pulsa el botón
     const timer = setTimeout(() => {
       setShowToast(prev => {
         if (prev) {
@@ -56,6 +56,7 @@ const TripSettingsScreen = () => {
     return () => clearTimeout(timer);
   };
 
+  // Seleccionar foto para el viaje
   const showImageOptions = () => {
     Alert.alert(
       'Foto del viaje',
@@ -69,6 +70,7 @@ const TripSettingsScreen = () => {
     );
   };
 
+  // Función para hacer una foto
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
@@ -90,6 +92,7 @@ const TripSettingsScreen = () => {
     }
   };
 
+  // Seleccionar imagen de la galería
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -111,6 +114,7 @@ const TripSettingsScreen = () => {
     }
   };
 
+  // Manejar la selección de fechas en el calendario
   const handleDayPress = (day: any) => {
     if (selectingStartDate) {
       setStartDate(day.dateString);
@@ -335,6 +339,7 @@ const TripSettingsScreen = () => {
   );
 };
 
+// Estilos de los ajustes del viaje
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingBottom: 40 },

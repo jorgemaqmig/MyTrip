@@ -27,6 +27,7 @@ import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
 
+// Categorías de gastos con sus respectivos iconos y colores
 const CATEGORIES: { id: ExpenseCategory; icon: any; color: string }[] = [
   { id: 'Comida', icon: 'restaurant', color: '#FF9500' },
   { id: 'Transporte', icon: 'car', color: '#5856D6' },
@@ -36,6 +37,7 @@ const CATEGORIES: { id: ExpenseCategory; icon: any; color: string }[] = [
   { id: 'Otro', icon: 'ellipsis-horizontal', color: '#8E8E93' },
 ];
 
+// Pantalla de Gastos
 const ExpensesScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -48,14 +50,11 @@ const ExpensesScreen = () => {
   const [submitting, setSubmitting] = useState(false);
   const [participantPhotos, setParticipantPhotos] = useState<Record<string, string>>({});
 
-  // Modals visibility
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
 
-  // Selection State
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
-  // Form State (New & Edit)
   const [formName, setFormName] = useState('');
   const [formAmount, setFormAmount] = useState('');
   const [formType, setFormType] = useState<ExpenseType>('Individual');
@@ -92,6 +91,7 @@ const ExpensesScreen = () => {
     };
   }, [activeTrip?.id, activeTrip?.participants]);
 
+  // Maneja la adición de un nuevo gasto
   const handleAddExpense = async () => {
     if (!formName.trim() || !formAmount || !activeTrip?.id || !user) {
       Alert.alert('Error', 'Por favor, rellena todos los campos');
@@ -119,6 +119,7 @@ const ExpensesScreen = () => {
     }
   };
 
+  // Maneja la actualización de un gasto existente
   const handleUpdateExpense = async () => {
     if (!formName.trim() || !formAmount || !activeTrip?.id || !selectedExpense?.id) return;
 
@@ -136,6 +137,7 @@ const ExpensesScreen = () => {
     }
   };
 
+  // Maneja la eliminación de un gasto existente
   const handleDeleteExpense = async () => {
     if (!activeTrip?.id || !selectedExpense?.id) return;
 
@@ -160,6 +162,7 @@ const ExpensesScreen = () => {
     );
   };
 
+  // Abre el modal para añadir un nuevo gasto
   const openAddModal = () => {
     setFormName('');
     setFormAmount('');
@@ -170,6 +173,7 @@ const ExpensesScreen = () => {
 
   const closeAddModal = () => setAddModalVisible(false);
 
+  // Abre el modal para editar un gasto existente
   const openEditModal = (expense: Expense) => {
     setSelectedExpense(expense);
     setFormName(expense.name);
@@ -182,6 +186,7 @@ const ExpensesScreen = () => {
     setSelectedExpense(null);
   };
 
+  // Filtra los gastos según la pestaña activa y calcula el total
   const filteredExpenses = expenses.filter(e => {
     if (activeTab === 'Colectivo') {
       return e.type === 'Colectivo';
@@ -207,7 +212,7 @@ const ExpensesScreen = () => {
       filteredExpenses.forEach(e => {
         dataMap[e.userId] = {
           amount: (dataMap[e.userId]?.amount || 0) + e.amount,
-          photo: participantPhotos[e.userId] || e.userPhoto, // Prioridad al perfil actual, luego al guardado en el gasto
+          photo: participantPhotos[e.userId] || e.userPhoto, 
           label: e.userName
         };
       });
@@ -249,6 +254,7 @@ const ExpensesScreen = () => {
     );
   };
 
+  // Renderiza la pantalla de gastos
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -407,6 +413,7 @@ const ExpensesScreen = () => {
   );
 };
 
+// Estilos para la pantalla de gastos
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 10 },

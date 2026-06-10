@@ -18,6 +18,7 @@ import { authService } from '../services/authService';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de edición de correo electrónico
 const EditEmailScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
@@ -56,6 +57,7 @@ const EditEmailScreen = () => {
     }
   };
 
+  // Renderiza la pantalla de edición de correo electrónico
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -119,6 +121,7 @@ const EditEmailScreen = () => {
   );
 };
 
+// Estilos para la pantalla de edición de correo electrónico
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 24 },

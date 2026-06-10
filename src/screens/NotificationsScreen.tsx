@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
-// ── Toggle personalizado ──
+// Toggle de notificaciones
 const CustomToggle = ({ value, onToggle, disabled, isDark }: { value: boolean; onToggle: () => void; disabled?: boolean, isDark: boolean }) => {
   const translateX = useRef(new Animated.Value(value ? 22 : 0)).current;
   const bgAnim    = useRef(new Animated.Value(value ? 1 : 0)).current;
@@ -32,6 +32,7 @@ const CustomToggle = ({ value, onToggle, disabled, isDark }: { value: boolean; o
       : (isDark ? ['#2C2C2E', '#32D74B'] : ['#E5E5EA', '#34C759']),
   });
 
+  // Evitamos que el toggle se active si está deshabilitado
   return (
     <TouchableOpacity
       activeOpacity={0.7}
@@ -51,7 +52,7 @@ const CustomToggle = ({ value, onToggle, disabled, isDark }: { value: boolean; o
   );
 };
 
-// ── Pantalla ──
+// Pantalla de Notificaciones
 const NotificationsScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -77,6 +78,7 @@ const NotificationsScreen = () => {
     </View>
   );
 
+  // Función para renderizar cada opción de notificación
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -172,7 +174,7 @@ const NotificationsScreen = () => {
   );
 };
 
-// ── Estilos ──
+// Estilos de la pantalla de Notificaciones
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 24, paddingBottom: 40 },
@@ -181,7 +183,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { fontSize: 16 },
 
-  // Master
   masterCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -197,13 +198,11 @@ const styles = StyleSheet.create({
   masterTitle: { fontSize: 16, fontWeight: 'bold' },
   masterSub: { fontSize: 13, marginTop: 2 },
 
-  // Sections
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginBottom: 12, marginLeft: 8 },
   card: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   sep: { height: 1, marginLeft: 68 },
 
-  // Option row
   optionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16 },
   optionDisabled: { opacity: 0.5 },
   iconBox: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
@@ -211,7 +210,6 @@ const styles = StyleSheet.create({
   optionTitle: { fontSize: 16, fontWeight: '500' },
   optionSub: { fontSize: 13, marginTop: 2 },
 
-  // Custom toggle
   toggleTouchable: { padding: 4 },
   toggleTrack: {
     width: 50,
@@ -233,7 +231,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  // Info
   infoBar: {
     flexDirection: 'row',
     padding: 16,

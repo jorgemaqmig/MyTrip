@@ -98,12 +98,10 @@ export const authService = {
     } catch (error: any) {
       console.log("Error detallado:", JSON.stringify(error, null, 2));
       
-      // Si el error ya es el string "USER_CANCELLED" de arriba, volver a lanzarlo
       if (error === "USER_CANCELLED") {
         throw error;
       }
 
-      // Capturar errores de cancelación tradicionales (cuando la promesa rechaza)
       if (
         error.code === statusCodes.SIGN_IN_CANCELLED ||
         error.code === '12501' ||

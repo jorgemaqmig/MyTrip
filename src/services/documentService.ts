@@ -29,7 +29,7 @@ export interface TravelDocument {
   type: DocType;
   fileUrl: string;
   fileName: string;
-  mimeType: string; // Nuevo campo para saber qué tipo de archivo es
+  mimeType: string; 
   storagePath: string;
   createdAt: any;
 }
@@ -60,7 +60,7 @@ export const documentService = {
     type: DocType,
     fileBlob: Blob,
     fileName: string,
-    mimeType: string // Nuevo parámetro
+    mimeType: string 
   ) => {
     try {
       const storagePath = `trips/${tripId}/documents/${Date.now()}_${fileName}`;

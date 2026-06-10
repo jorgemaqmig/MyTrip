@@ -12,21 +12,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import MapView, { Polyline, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
+// Paleta de colores para asignar a los días del viaje (se repite si hay más días que colores)
 const PREMIUM_PALETTE = [
-  '#3B82F6', // Royal Blue
-  '#10B981', // Emerald Green
-  '#FF6B35', // Orange Coral
-  '#8B5CF6', // Purple Orchid
-  '#EC4899', // Rose Pink
-  '#06B6D4', // Sky Blue
-  '#F59E0B', // Golden Honey
-  '#EF4444', // Red Fire
+  '#3B82F6', 
+  '#10B981', 
+  '#FF6B35', 
+  '#8B5CF6', 
+  '#EC4899', 
+  '#06B6D4', 
+  '#F59E0B', 
+  '#EF4444', 
 ];
 
 const DEFAULT_COLORS = PREMIUM_PALETTE;
 
 const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
+// Interfaces para puntos del viaje y transporte
 interface TransitStep {
   instruction: string;
   mode: string;
@@ -42,6 +44,7 @@ interface TransitStep {
   arrivalStop?: string;
 }
 
+// Información de transporte entre dos puntos del viaje
 interface TransportInfo {
   mode: string;
   icon: string;
@@ -51,7 +54,6 @@ interface TransportInfo {
   steps?: TransitStep[];
 }
 
-// Decodificador de polylines de Google (formato encoded)
 const decodePolyline = (encoded: string): { latitude: number; longitude: number }[] => {
   const points: { latitude: number; longitude: number }[] = [];
   let index = 0;
@@ -90,6 +92,7 @@ const darkMapStyle = [
   { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] },
 ];
 
+// Pantalla principal del itinerario del viaje, donde se muestran los puntos organizados por días y se pueden editar
 const ItineraryScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip, setActiveTrip } = useTrip();
@@ -104,6 +107,7 @@ const ItineraryScreen = () => {
   const [loadingRoutes, setLoadingRoutes] = useState<{ [key: string]: boolean }>({});
   const [selectedModes, setSelectedModes] = useState<{ [key: string]: number }>({});
 
+  // Cargar colores de días desde el viaje activo
   useEffect(() => {
     if (activeTrip?.dayColors) {
       setDayColors(activeTrip.dayColors);
@@ -128,6 +132,7 @@ const ItineraryScreen = () => {
     }));
   };
 
+  // Escuchar cambios en los puntos del viaje en tiempo real
   useEffect(() => {
     if (!activeTrip?.id) return;
 
@@ -149,6 +154,7 @@ const ItineraryScreen = () => {
     return () => unsubscribe();
   }, [activeTrip?.id]);
 
+  // Generar lista de días del viaje con formato "Día 1 - 12 Ene"
   const getTripDays = () => {
     if (!activeTrip?.startDate || !activeTrip?.endDate) return [];
     const startParts = activeTrip.startDate.split('-');
@@ -171,7 +177,6 @@ const ItineraryScreen = () => {
 
   const tripDays = getTripDays();
 
-  // --- EDIT MODE LOGIC ---
   const toggleEditDay = (dayIndex: number) => {
     if (editDay === dayIndex) {
       handleSaveOrder(dayIndex);
@@ -181,6 +186,7 @@ const ItineraryScreen = () => {
     }
   };
 
+  // Guardar cambios de orden y color al salir del modo edición
   const handleSaveOrder = async (dayIndex: number) => {
     setEditDay(null);
     setPoints(prev => [
@@ -219,6 +225,7 @@ const ItineraryScreen = () => {
     }
   };
 
+  // Eliminar un punto del viaje con confirmación
   const handleDelete = (pointId: string) => {
     Alert.alert('Eliminar', '¿Quitar sitio?', [
       { text: 'Cancelar', style: 'cancel' },
@@ -247,7 +254,6 @@ const ItineraryScreen = () => {
     }
   };
 
-  // --- TRANSPORT DIRECTIONS ---
   const fetchTransportInfo = async (from: TripPoint, to: TripPoint): Promise<TransportInfo[]> => {
     const modes = [
       { apiMode: 'walking', label: 'Andando', icon: 'walk-outline' },
@@ -265,6 +271,7 @@ const ItineraryScreen = () => {
           const encodedPoly = data.routes[0].overview_polyline?.points || '';
           const decoded = encodedPoly ? decodePolyline(encodedPoly) : [];
           
+          // Parsear pasos detallados para transporte público
           const parsedSteps: TransitStep[] = [];
           if (leg.steps) {
             for (const s of leg.steps) {
@@ -289,6 +296,7 @@ const ItineraryScreen = () => {
             }
           }
 
+          // Solo agregar a resultados si se obtuvo una ruta válida
           results.push({ 
             mode: m.label, 
             icon: m.icon, 
@@ -307,6 +315,7 @@ const ItineraryScreen = () => {
     return results;
   };
 
+  // Manejar expansión y carga de información de transporte entre dos puntos
   const handleToggleRoute = async (from: TripPoint, to: TripPoint) => {
     const key = `${from.id}_${to.id}`;
     if (expandedRoutes[key]) {
@@ -353,6 +362,7 @@ const ItineraryScreen = () => {
     );
   };
 
+  // Renderizar con modo edición para reordenar puntos
   const renderTransportConnector = (fromPoint: TripPoint, toPoint: TripPoint, dayColor: string) => {
     const routeKey = `${fromPoint.id}_${toPoint.id}`;
     const isExpanded = expandedRoutes[routeKey] || false;
@@ -547,6 +557,7 @@ const ItineraryScreen = () => {
     );
   };
 
+  // Renderizar punto en modo edición para permitir reordenar con drag and drop
   const renderDraggablePoint = ({ item, drag, isActive, index }: any) => {
     const dayColor = getDayColor(item.dayIndex);
     return (
@@ -594,6 +605,7 @@ const ItineraryScreen = () => {
     );
   };
 
+  // Renderizar encabezado de cada día con botón para editar y seleccionar color
   const renderDayHeader = (title: string, subtitle: string, dayIndex: number) => {
     const dayColor = getDayColor(dayIndex);
     const isEditing = editDay === dayIndex;
@@ -630,6 +642,7 @@ const ItineraryScreen = () => {
     );
   };
 
+  // Renderizar sección de cada día con su lista de puntos, modo edición para reordenar y selector de color
   const renderDaySection = (title: string, subtitle: string, dayIndex: number, isUnassigned = false) => {
     const isEditing = editDay === dayIndex;
     const dayPoints = isEditing ? localDayPoints : points.filter(p => p.dayIndex === dayIndex).sort((a,b) => a.order - b.order);
@@ -722,6 +735,7 @@ const ItineraryScreen = () => {
   );
 };
 
+// Estilos para la pantalla de itinerario, incluyendo diseño de tarjetas, timeline, botones y modo edición
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollView: { flex: 1 },

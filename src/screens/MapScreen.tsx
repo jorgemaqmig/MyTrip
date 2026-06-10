@@ -36,16 +36,17 @@ const darkMapStyle = [
 ];
 
 const PREMIUM_PALETTE = [
-  '#3B82F6', // Royal Blue
-  '#10B981', // Emerald Green
-  '#FF6B35', // Orange Coral
-  '#8B5CF6', // Purple Orchid
-  '#EC4899', // Rose Pink
-  '#06B6D4', // Sky Blue
-  '#F59E0B', // Golden Honey
-  '#EF4444', // Red Fire
+  '#3B82F6', 
+  '#10B981', 
+  '#FF6B35', 
+  '#8B5CF6', 
+  '#EC4899',
+  '#06B6D4', 
+  '#F59E0B', 
+  '#EF4444', 
 ];
 
+// Pantalla principal del mapa donde se muestran los puntos del viaje y se pueden añadir nuevos lugares
 const MapScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip } = useTrip();
@@ -99,6 +100,7 @@ const MapScreen = () => {
     return () => unsubscribe();
   }, [activeTrip?.id]);
 
+  // Región inicial centrada en el último punto del viaje
   const initialRegion = {
     latitude: activeTrip?.latitude || 40.4168,
     longitude: activeTrip?.longitude || -3.7038,
@@ -106,11 +108,13 @@ const MapScreen = () => {
     longitudeDelta: 0.1,
   };
 
+  // Función para abrir el modal de edición al pulsar un punto del mapa
   const handleEditPointPress = (point: TripPoint) => {
     setSelectedPointToEdit(point);
     setEditPointModalVisible(true);
   };
 
+  // Función para actualizar el día de un punto existente
   const handleUpdatePointDay = async (newDayIndex: number) => {
     if (!activeTrip?.id || !selectedPointToEdit) return;
     try {
@@ -128,6 +132,7 @@ const MapScreen = () => {
     }
   };
 
+  // Función para eliminar un punto del viaje
   const handleDeletePoint = async () => {
     if (!activeTrip?.id || !selectedPointToEdit) return;
     Alert.alert('Eliminar', '¿Quitar sitio de tu itinerario?', [
@@ -145,6 +150,7 @@ const MapScreen = () => {
     ]);
   };
 
+  // Función para generar la lista de días del viaje a partir de las fechas de inicio y fin
   const getTripDays = () => {
     if (!activeTrip?.startDate || !activeTrip?.endDate) return [];
     const startParts = activeTrip.startDate.split('-');
@@ -166,6 +172,7 @@ const MapScreen = () => {
 
   const tripDays = getTripDays();
 
+  // Función que se ejecuta al seleccionar un lugar del buscador de Google Places
   const handlePlaceSelect = (data: any, details: any = null) => {
     if (!details) return;
     setSelectedPlace({
@@ -182,6 +189,7 @@ const MapScreen = () => {
     }
   };
 
+  // Función para añadir un nuevo punto al viaje asignándolo a un día específico
   const handleAddPoint = async (dayIndex: number) => {
     if (!activeTrip?.id || !selectedPlace) return;
     const color = getDayColor(dayIndex);
@@ -211,6 +219,7 @@ const MapScreen = () => {
     radius: 50000,
   }), [activeTrip?.latitude, activeTrip?.longitude]);
 
+  // Renderizamos el mapa, los puntos del viaje, el buscador de lugares y los modales para añadir/editar puntos
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -442,6 +451,7 @@ const MapScreen = () => {
   );
 };
 
+// Estilos para la pantalla del mapa y los modales
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { width: '100%', height: '100%' },
@@ -496,7 +506,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  // ──── Edit Modal Premium Styles ────
   editModalContent: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,

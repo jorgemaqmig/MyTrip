@@ -18,15 +18,17 @@ import { tripService, Trip } from '../services/tripService';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// ── Pantalla Mis Viajes ──
 const MyTripsScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' o 'past'
+  const [activeTab, setActiveTab] = useState('upcoming'); 
   const { user } = useAuth();
   const { setActiveTrip } = useTrip();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Función para cargar los viajes del usuario
   const loadTrips = async () => {
     if (!user) return;
     setLoading(true);
@@ -61,6 +63,7 @@ const MyTripsScreen = () => {
     return tripColors[index % tripColors.length] as readonly [string, string, ...string[]];
   };
 
+  // Función para renderizar cada tarjeta de viaje
   const renderTripCard = ({ item, index }: any) => {
     const color = getTripColor(index);
     const dateStr = item.startDate && item.endDate 
@@ -121,6 +124,7 @@ const MyTripsScreen = () => {
     );
   };
 
+  // Renderizado principal
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -183,6 +187,7 @@ const MyTripsScreen = () => {
   );
 };
 
+// Estilos de la pantalla de Mis viajes
 const styles = StyleSheet.create({
   container: { flex: 1 },
   listContent: { padding: 24 },

@@ -21,6 +21,7 @@ import { useTheme } from '../context/ThemeContext';
 import { chatService, ChatMessage } from '../services/chatService';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de Chat
 const ChatScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip, markChatAsRead } = useTrip();
@@ -32,6 +33,7 @@ const ChatScreen = () => {
   const [loading, setLoading] = useState(true);
   const flatListRef = useRef<FlatList>(null);
 
+  // Marca el chat como leído cada vez que se abre o cambia de viaje
   useFocusEffect(
     React.useCallback(() => {
       if (activeTrip?.id) {
@@ -80,7 +82,7 @@ const ChatScreen = () => {
   const renderMessage = ({ item, index }: { item: ChatMessage, index: number }) => {
     const isMe = item.userId === user?.uid;
     
-    // Lógica para agrupar mensajes (FlatList inverted)
+    // Lógica para agrupar mensajes
     const prevMessage = index + 1 < messages.length ? messages[index + 1] : null;
     const nextMessage = index - 1 >= 0 ? messages[index - 1] : null;
 
@@ -111,6 +113,7 @@ const ChatScreen = () => {
           </View>
         )}
 
+        {/* Contenido del mensaje con burbuja */}
         <View style={[styles.messageContent, { alignItems: isMe ? 'flex-end' : 'flex-start' }]}>
           {(!isMe && isFirstInBlock) && (
             <Text style={[styles.senderName, { color: colors.textSecondary }]}>{item.userName}</Text>
@@ -168,6 +171,7 @@ const ChatScreen = () => {
         </View>
       </View>
 
+      {/* Área de mensajes e input */}
       <KeyboardAvoidingView
         style={styles.flexOne}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -195,7 +199,7 @@ const ChatScreen = () => {
           {
             backgroundColor: colors.background,
             borderTopColor: colors.border,
-            paddingBottom: Math.max(insets.bottom, 12) + 10 // Subir un poco más como pidió el usuario
+            paddingBottom: Math.max(insets.bottom, 12) + 10
           }
         ]}>
           <View style={[styles.inputContainer, { backgroundColor: isDark ? '#1C1C1E' : '#F2F2F7' }]}>
@@ -222,6 +226,7 @@ const ChatScreen = () => {
   );
 };
 
+// Estilos para la pantalla de chat
 const styles = StyleSheet.create({
   container: { flex: 1 },
   flexOne: { flex: 1 },
@@ -247,20 +252,18 @@ const styles = StyleSheet.create({
   avatarContainer: {
     marginRight: 8,
     alignSelf: 'flex-end',
-    // Eliminado padding manual para que se alinee con la base
   },
   avatar: { width: 32, height: 32, borderRadius: 16 },
   avatarPlaceholder: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   avatarText: { fontSize: 14, fontWeight: 'bold' },
   messageContent: {
-    // Quitamos flex: 1 para que no ocupe todo el ancho
   },
   senderName: { fontSize: 11, fontWeight: '600', marginBottom: 4, marginLeft: 12 },
   bubble: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    maxWidth: '100%', // El máximo ya lo da el messageWrapper (80%)
+    maxWidth: '100%',
   },
   messageText: { fontSize: 15, lineHeight: 20 },
   timePlaceholder: { fontSize: 10 },

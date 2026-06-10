@@ -22,7 +22,7 @@ import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 48) / 2; // Ajustado para el padding de 16
+const CARD_WIDTH = (width - 48) / 2; 
 
 const ICON_COLORS = {
   create:  '#FF6B35',
@@ -31,6 +31,7 @@ const ICON_COLORS = {
   trips:   '#0984E3',
 };
 
+// Pantalla de Inicio 
 const StartScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
@@ -82,6 +83,7 @@ const StartScreen = () => {
     return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
   };
 
+  // Función para renderizar el hero dinámico o las opciones de Crear/Unirse
   const renderHero = () => {
     if (trips.length > 0 && currentTrip) {
       return (
@@ -154,6 +156,7 @@ const StartScreen = () => {
       );
     }
 
+    // Si no hay viajes, mostrar las opciones de Crear/Unirse
     return (
       <View style={{ gap: 16 }}>
         {/* Card de Crear Viaje (Doble Ancho) */}
@@ -189,6 +192,7 @@ const StartScreen = () => {
     );
   };
 
+  // Renderizado principal
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -307,6 +311,7 @@ const StartScreen = () => {
   );
 };
 
+// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,

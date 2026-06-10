@@ -22,6 +22,7 @@ import { StatusBar } from 'expo-status-bar';
 
 const { width, height } = Dimensions.get('window');
 
+// Pantalla de Configuración
 const SettingsScreen = () => {
   const navigation = useNavigation<any>();
   const { user, userData } = useAuth();
@@ -30,6 +31,7 @@ const SettingsScreen = () => {
 
   const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com');
 
+  // Función para manejar el cierre de sesión
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -39,6 +41,7 @@ const SettingsScreen = () => {
     }
   };
 
+  // Componente para cada opción de configuración
   const SettingItem = ({ icon, title, subtitle, onPress, color, isDestructive }: any) => (
     <TouchableOpacity 
       style={styles.settingItem} 
@@ -56,6 +59,7 @@ const SettingsScreen = () => {
     </TouchableOpacity>
   );
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -228,6 +232,7 @@ const SettingsScreen = () => {
   );
 };
 
+// Estilos de la pantalla
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 24 },

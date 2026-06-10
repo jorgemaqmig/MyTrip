@@ -33,7 +33,6 @@ export const TripProvider = ({ children }: { children: ReactNode }) => {
         const data = docSnap.data();
         setActiveTrip(prev => {
           if (!prev) return null;
-          // Evitar bucle de actualización si los datos clave no cambiaron
           if (
             JSON.stringify(prev.dayColors) === JSON.stringify(data.dayColors) &&
             prev.name === data.name &&
@@ -66,7 +65,7 @@ export const TripProvider = ({ children }: { children: ReactNode }) => {
       const lastMsgId = lastMsg.id;
       const lastMsgData = lastMsg.data();
 
-      // Si el mensaje es mío, no marcamos como no leído
+      // Si el mensaje es mío, no se marca como no leído
       if (lastMsgData.userId === user.uid) return;
 
       const savedLastReadId = await AsyncStorage.getItem(`lastRead_${activeTrip.id}`);

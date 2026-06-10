@@ -20,6 +20,7 @@ import { useTrip } from '../context/TripContext';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// ── Pantalla Más Opciones ──
 const MoreScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -41,16 +42,19 @@ const MoreScreen = () => {
     }
   };
 
+  // Funciones para eliminar o abandonar el viaje
   const handleDeleteTrip = () => {
     setConfirmType('delete');
     setConfirmModalVisible(true);
   };
 
+  // Función para abandonar el viaje
   const handleLeaveTrip = () => {
     setConfirmType('leave');
     setConfirmModalVisible(true);
   };
 
+  // Función para confirmar la acción de eliminar o abandonar el viaje
   const handleConfirmAction = async () => {
     if (!activeTrip?.id) return;
     setConfirmLoading(true);
@@ -71,6 +75,7 @@ const MoreScreen = () => {
     }
   };
 
+  // Componente para cada opción del menú
   const MenuItem = ({ icon, title, subtitle, onPress, color }: any) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={[styles.iconContainer, { backgroundColor: color + '15' }]}>
@@ -84,6 +89,7 @@ const MoreScreen = () => {
     </TouchableOpacity>
   );
 
+  // Renderizado principal
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -235,6 +241,7 @@ const MoreScreen = () => {
   );
 };
 
+// Estilos
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 24 },

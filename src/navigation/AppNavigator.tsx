@@ -121,6 +121,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   );
 };
 
+// Navegación Principal de los viajes
 const MainTabs = () => {
   return (
     <Tab.Navigator
@@ -138,6 +139,7 @@ const MainTabs = () => {
   );
 };
 
+// Navegación Principal de la app
 const AppNavigator = () => {
   const { colors } = useTheme();
 
@@ -164,6 +166,7 @@ const AppNavigator = () => {
   );
 };
 
+// Estilos para la barra de navegación personalizada
 const styles = StyleSheet.create({
   tabBarContainer: {
     position: 'absolute',
@@ -207,7 +210,7 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: 'white', // Un pequeño borde blanco para que resalte
+    borderColor: 'white',
   },
 });
 

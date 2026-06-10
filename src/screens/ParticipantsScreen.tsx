@@ -25,6 +25,7 @@ interface ParticipantData {
   photoURL?: string;
 }
 
+// Pantalla de Participantes
 const ParticipantsScreen = () => {
   const navigation = useNavigation<any>();
   const { activeTrip, setActiveTrip } = useTrip();
@@ -36,6 +37,7 @@ const ParticipantsScreen = () => {
   const currentUserIsOrganizer = activeTrip?.organizers?.includes(user?.uid || '') || activeTrip?.userId === user?.uid;
   const currentUserIsCreator = user?.uid === activeTrip?.userId;
 
+  // Cargamos los datos de los participantes al montar la pantalla
   useEffect(() => {
     const loadParticipants = async () => {
       if (!activeTrip?.participants) {
@@ -71,6 +73,7 @@ const ParticipantsScreen = () => {
     loadParticipants();
   }, [activeTrip]);
 
+  // Función para promover a un participante a organizador
   const handlePromote = async (targetUserId: string) => {
     if (!activeTrip?.id) return;
     
@@ -83,6 +86,7 @@ const ParticipantsScreen = () => {
     }
   };
 
+  // Función para degradar a un organizador a participante
   const handleDemote = async (targetUserId: string) => {
     if (!activeTrip?.id) return;
     
@@ -95,6 +99,7 @@ const ParticipantsScreen = () => {
     }
   };
 
+  // Función para renderizar cada participante
   const renderParticipant = ({ item }: { item: ParticipantData }) => {
     const isOrganizer = activeTrip?.organizers?.includes(item.uid) || item.uid === activeTrip?.userId;
     const isCreator = item.uid === activeTrip?.userId;
@@ -148,6 +153,7 @@ const ParticipantsScreen = () => {
     );
   };
 
+  // Función para renderizar cada participante
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -185,6 +191,7 @@ const ParticipantsScreen = () => {
   );
 };
 
+// Estilos de la pantalla de Participantes
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {

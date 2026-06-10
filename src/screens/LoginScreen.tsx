@@ -21,6 +21,7 @@ import { authService } from '../services/authService';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de inicio de sesión con opciones para ingresar correo y contraseña o usar Google
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -29,6 +30,7 @@ const LoginScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Función para manejar el inicio de sesión con correo y contraseña
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Por favor, rellena todos los campos');
@@ -46,6 +48,7 @@ const LoginScreen = () => {
     }
   };
 
+  // Función para manejar el inicio de sesión con Google
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
@@ -60,6 +63,7 @@ const LoginScreen = () => {
     }
   };
 
+  // Renderizar la pantalla de inicio de sesión con campos para correo y contraseña, botón para iniciar sesión y opción para usar Google
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -175,6 +179,7 @@ const LoginScreen = () => {
   );
 };
 
+// Estilos para la pantalla de inicio de sesión con campos para correo y contraseña, botón para iniciar sesión y opción para usar Google
 const styles = StyleSheet.create({
   container: {
     flex: 1,

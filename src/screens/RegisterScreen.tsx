@@ -22,6 +22,7 @@ import { authService } from '../services/authService';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de Registro
 const RegisterScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -32,6 +33,7 @@ const RegisterScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Función para manejar el registro con email y contraseña
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Todos los campos son obligatorios');
@@ -61,6 +63,7 @@ const RegisterScreen = () => {
     }
   };
 
+  // Función para manejar el registro con Google
   const handleGoogleRegister = async () => {
     try {
       setLoading(true);
@@ -75,6 +78,7 @@ const RegisterScreen = () => {
     }
   };
 
+  // Renderizamos la pantalla de registro
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -231,6 +235,7 @@ const RegisterScreen = () => {
   );
 };
 
+// Estilos de la pantalla de Registro
 const styles = StyleSheet.create({
   container: {
     flex: 1,

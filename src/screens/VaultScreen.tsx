@@ -31,6 +31,7 @@ import { StatusBar } from 'expo-status-bar';
 
 const { width, height } = Dimensions.get('window');
 
+// Categorias de documentos
 const CATEGORIES: { id: DocCategory; icon: any; color: string }[] = [
   { id: 'Pasaporte', icon: 'card', color: '#FF3B30' },
   { id: 'Billete', icon: 'airplane', color: '#5856D6' },
@@ -41,6 +42,7 @@ const CATEGORIES: { id: DocCategory; icon: any; color: string }[] = [
   { id: 'Otros', icon: 'document-text', color: '#8E8E93' },
 ];
 
+// Pantalla de gestión de documentos del viaje
 const VaultScreen = () => {
   const navigation = useNavigation<any>();
   const { colors, isDark } = useTheme();
@@ -57,7 +59,6 @@ const VaultScreen = () => {
   const [submitting, setSubmitting] = useState(false);
   const [documents, setDocuments] = useState<TravelDocument[]>([]);
 
-  // Form State
   const [formTitle, setFormTitle] = useState('');
   const [formType, setFormType] = useState<DocType>('Individual');
   const [formCategory, setFormCategory] = useState<DocCategory>('Pasaporte');
@@ -78,6 +79,7 @@ const VaultScreen = () => {
     return () => unsubscribe();
   }, [activeTrip?.id]);
 
+  // Filtrar documentos según búsqueda, pestaña activa, categoría y propiedad
   const filteredDocs = documents.filter(doc => {
     const matchesSearch = doc.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = doc.type === activeTab;
@@ -86,6 +88,7 @@ const VaultScreen = () => {
     return matchesSearch && matchesTab && matchesCategory && isOwner;
   });
 
+  // Seleccionar documento
   const pickDocument = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -104,6 +107,7 @@ const VaultScreen = () => {
     }
   };
 
+  // Manejar la subida del documento
   const handleAddDocument = async () => {
     const tripId = activeTrip?.id;
     const userId = user?.uid;
@@ -167,6 +171,7 @@ const VaultScreen = () => {
     }
   };
 
+  // Función para abrir y compartir el archivo
   const openFile = async (docItem: TravelDocument) => {
     try {
       const fs = FileSystem as any;
@@ -188,6 +193,7 @@ const VaultScreen = () => {
     }
   };
 
+  // Función para eliminar un documento
   const deleteDocument = (docItem: TravelDocument) => {
     const tripId = activeTrip?.id;
     if (!tripId || !docItem.id) return;
@@ -230,6 +236,7 @@ const VaultScreen = () => {
     );
   };
 
+  // Renderizado principal
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -414,6 +421,7 @@ const VaultScreen = () => {
   );
 };
 
+// Estilos de la pantalla de documentos
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },

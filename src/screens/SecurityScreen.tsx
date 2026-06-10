@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 
+// Pantalla de Seguridad
 const SecurityScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
@@ -30,6 +31,7 @@ const SecurityScreen = () => {
 
   const isGoogleUser = user?.providerData.some(p => p.providerId === 'google.com');
 
+  // Función para manejar la actualización de contraseña
   const handleSave = async () => {
     if (password.length < 6) {
       Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
@@ -57,6 +59,7 @@ const SecurityScreen = () => {
     }
   };
 
+  // Renderizado de la pantalla
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -173,6 +176,7 @@ const SecurityScreen = () => {
   );
 };
 
+// Estilos de la pantalla
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 24 },
